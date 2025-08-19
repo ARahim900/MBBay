@@ -1,0 +1,5 @@
+{
+  "name": "Muscat Bay Utilities Management Dashboard",
+  "description": "An integrated dashboard for managing and analyzing key utilities at Muscat Bay, including Water, Electricity, HVAC, and more. Provides a comprehensive overview, detailed analysis, and data management for efficient operations.",
+  "requestFramePermissions": []
+}
