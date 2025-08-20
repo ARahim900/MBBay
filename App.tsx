@@ -7,6 +7,7 @@ import { Bell, Droplets, Flame, HardHat, Home, Menu, Power, Settings, User, Wind
 import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
 import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
 import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
+import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 
 
 // -- STATE MANAGEMENT (ZUSTAND) --
@@ -730,129 +731,9 @@ const ContractorModule = () => {
 };
 
 // -- STP PLANT MODULE --
-const stpKpis = [
-    { title: "INLET SEWAGE", value: "211,075 m³", subValue: "For July 2024 - July 2025" },
-    { title: "TSE FOR IRRIGATION", value: "201,906 m³", subValue: "Recycled water" },
-    { title: "TANKER TRIPS", value: "3,375 trips", subValue: "Total discharges" },
-    { title: "GENERATED INCOME", value: "15,187 OMR", subValue: "From tanker fees" },
-    { title: "WATER SAVINGS", value: "266,516 OMR", subValue: "By using TSE water" },
-    { title: "TOTAL IMPACT", value: "281,703 OMR", subValue: "Savings + Income" },
-];
-const stpMonthlyWaterData = [
-    { name: 'Jul 24', input: 15000, output: 14000 }, { name: 'Sep 24', input: 16000, output: 15000 },
-    { name: 'Nov 24', input: 17000, output: 16000 }, { name: 'Jan 25', input: 18000, output: 17000 },
-    { name: 'Mar 25', input: 19000, output: 18000 }, { name: 'May 25', input: 20000, output: 19000 },
-    { name: 'Jul 25', input: 21000, output: 20000 },
-];
-const stpMonthlyFinancialsData = [
-    { name: 'Jul 24', income: 1000, savings: 15000 }, { name: 'Sep 24', income: 1100, savings: 16000 },
-    { name: 'Nov 24', income: 1200, savings: 17000 }, { name: 'Jan 25', income: 1300, savings: 18000 },
-    { name: 'Mar 25', income: 1400, savings: 19000 }, { name: 'May 25', income: 1500, savings: 20000 },
-    { name: 'Jul 25', income: 1600, savings: 21000 },
-];
-const stpMonthlyTankersData = [
-    { name: 'Jul 24', trips: 200 }, { name: 'Sep 24', trips: 220 }, { name: 'Nov 24', trips: 210 },
-    { name: 'Jan 25', trips: 250 }, { name: 'Mar 25', trips: 280 }, { name: 'May 25', trips: 300 },
-    { name: 'Jul 25', trips: 290 },
-];
-const stpDailyLogData = [
-    { date: "07/07/2025", inlet: 520, tse: 500, tankers: 9, income: 40.50, savings: 699.60, total: 740.10 },
-    { date: "06/07/2025", inlet: 615, tse: 590, tankers: 15, income: 67.50, savings: 826.30, total: 893.80 },
-    { date: "05/07/2025", inlet: 637, tse: 608, tankers: 9, income: 40.50, savings: 850.50, total: 891.00 },
-    { date: "04/07/2025", inlet: 621, tse: 576, tankers: 12, income: 54.00, savings: 780.32, total: 834.32 },
-    { date: "02/07/2025", inlet: 544, tse: 528, tankers: 8, income: 36.00, savings: 698.96, total: 734.96 },
-    { date: "01/07/2025", inlet: 528, tse: 498, tankers: 13, income: 58.50, savings: 579.20, total: 637.70 },
-];
-
-const STPPlantModule = () => (
-    <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">STP Plant Operations</h2>
-        <Card>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-4">
-                    <label>Select Period Range</label>
-                    <input type="text" value="2024-07" readOnly className="p-2 border rounded-md w-32 text-center bg-gray-50 dark:bg-white/10" />
-                    <span>to</span>
-                    <input type="text" value="2025-07" readOnly className="p-2 border rounded-md w-32 text-center bg-gray-50 dark:bg-white/10" />
-                    <button className="text-gray-500 hover:text-gray-800 transition-transform duration-200 hover:rotate-90"><RefreshCw className="w-5 h-5" /></button>
-                </div>
-            </div>
-        </Card>
-        <Card>
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Selected Period: July 2024 - July 2025</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {stpKpis.map(kpi => (
-                    <div key={kpi.title} className="p-4 rounded-lg bg-gray-50 dark:bg-white/5">
-                        <p className="text-sm text-gray-500">{kpi.title}</p>
-                        <p className="font-bold text-2xl text-[#4E4456] dark:text-white">{kpi.value}</p>
-                        <p className="text-xs text-gray-400">{kpi.subValue}</p>
-                    </div>
-                ))}
-            </div>
-        </Card>
-        <Card>
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Water Volumes (m³)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={stpMonthlyWaterData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" /> 
-                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} /> 
-                    <YAxis fontSize={12} tickLine={false} axisLine={false} /> 
-                    <Tooltip content={<CustomTooltip />} /> <Legend />
-                    <Area type="monotone" dataKey="input" stackId="1" stroke="#8884d8" fill="#8884d8" name="Sewage Input" />
-                    <Area type="monotone" dataKey="output" stackId="1" stroke="#82ca9d" fill="#82ca9d" name="TSE Output" />
-                </AreaChart>
-            </ResponsiveContainer>
-        </Card>
-        <Card>
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Financials (OMR)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={stpMonthlyFinancialsData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" /> 
-                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} /> 
-                    <YAxis fontSize={12} tickLine={false} axisLine={false} /> 
-                    <Tooltip content={<CustomTooltip />} /> <Legend />
-                    <Bar dataKey="income" stackId="a" fill="#8884d8" name="Income" radius={[4, 4, 0, 0]}/>
-                    <Bar dataKey="savings" stackId="a" fill="#82ca9d" name="Savings" radius={[4, 4, 0, 0]}/>
-                </BarChart>
-            </ResponsiveContainer>
-        </Card>
-         <Card>
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Operations (Tanker Trips)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={stpMonthlyTankersData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" /> 
-                    <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} /> 
-                    <YAxis fontSize={12} tickLine={false} axisLine={false} /> 
-                    <Tooltip content={<CustomTooltip />} /> <Legend />
-                    <Line type="monotone" dataKey="trips" stroke="#ff7300" name="Tanker Trips" />
-                </LineChart>
-            </ResponsiveContainer>
-        </Card>
-        <Card>
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Daily Operations Log for July 2025</h3>
-             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
-                        <tr>{['Date', 'Inlet (m³)', 'TSE (m³)', 'Tankers', 'Income (OMR)', 'Savings (OMR)', 'Total (OMR)'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
-                    </thead>
-                     <tbody>
-                        {stpDailyLogData.map((item, idx) => (
-                            <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                <td className="px-4 py-2">{item.date}</td>
-                                <td className="px-4 py-2">{item.inlet}</td>
-                                <td className="px-4 py-2">{item.tse}</td>
-                                <td className="px-4 py-2">{item.tankers}</td>
-                                <td className="px-4 py-2">{item.income.toFixed(2)}</td>
-                                <td className="px-4 py-2">{item.savings.toFixed(2)}</td>
-                                <td className="px-4 py-2 font-semibold">{item.total.toFixed(2)}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </Card>
-    </div>
-);
+const STPPlantModule = () => {
+    return <EnhancedSTPModule />;
+};
 
 
 // -- LAYOUT & APP --
