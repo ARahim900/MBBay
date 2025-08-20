@@ -78,38 +78,55 @@ export const ConsumptionByTypeTab = () => {
         console.log('All types that contain "landscape":', allTypes.filter(type => type.toLowerCase().includes('landscape')))
       }
       
-      // More flexible type filtering
+      // More flexible type filtering based on actual database types
       const selectedTypeMeters = waterMeters.filter(m => {
         if (!m.type) return false
         
         const meterType = m.type.toLowerCase()
         const searchType = selectedType.toLowerCase()
         
-        // Handle different possible type names
+        // Map display types to actual database types
         if (searchType === 'irrigation') {
-          return meterType.includes('irrigation') || 
+          return meterType.includes('irr_servies') || 
+                 meterType.includes('irrigation') || 
                  meterType.includes('irrigat') || 
                  meterType.includes('garden') ||
                  meterType.includes('landscape')
         }
         
         if (searchType === 'commercial') {
-          return meterType.includes('commercial') || 
+          return meterType.includes('retail') ||
+                 meterType.includes('commercial') || 
                  meterType.includes('business') ||
                  meterType.includes('office')
         }
         
         if (searchType === 'residential') {
           return meterType.includes('residential') || 
+                 meterType.includes('villa') ||
+                 meterType.includes('apart') ||
                  meterType.includes('house') ||
-                 meterType.includes('home') ||
-                 meterType.includes('villa')
+                 meterType.includes('home')
         }
         
         if (searchType === 'common') {
-          return meterType.includes('common') || 
+          return meterType.includes('mb_common') ||
+                 meterType.includes('d_building_common') ||
+                 meterType.includes('common') || 
                  meterType.includes('shared') ||
                  meterType.includes('community')
+        }
+        
+        if (searchType === 'building') {
+          return meterType.includes('building') ||
+                 meterType.includes('d_building') ||
+                 meterType.includes('structure')
+        }
+        
+        if (searchType === 'bulk') {
+          return meterType.includes('bulk') ||
+                 meterType.includes('main bulk') ||
+                 meterType.includes('zone bulk')
         }
         
         // Fallback to partial match
@@ -197,6 +214,16 @@ export const ConsumptionByTypeTab = () => {
     month.consumption > max.consumption ? month : max, 
     { month: '', consumption: 0 }
   )
+  
+  // Calculate percentage of L1 supply dynamically
+  const l1Meters = waterMeters.filter(m => m.label === 'L1')
+  const l1TotalConsumption = l1Meters.reduce((sum, meter) => {
+    const months = ['jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25']
+    const monthsInRange = months.slice(startMonth, endMonth + 1)
+    return sum + monthsInRange.reduce((mSum, month) => mSum + ((meter as any)[month] || 0), 0)
+  }, 0)
+  
+  const percentageOfL1 = l1TotalConsumption > 0 ? ((totalConsumption / l1TotalConsumption) * 100).toFixed(1) : '0.0'
 
   const kpis = [
     { 
@@ -226,14 +253,14 @@ export const ConsumptionByTypeTab = () => {
     { 
       icon: PieIcon, 
       title: "% OF L1 SUPPLY", 
-      value: "52.8%", 
+      value: `${percentageOfL1}%`, 
       subtitle: `${selectedType} share of total`, 
       color: "bg-teal-100", 
       iconColor: "text-teal-500" 
     },
   ]
 
-  const availableTypes = ['Commercial', 'Residential', 'Irrigation', 'Common']
+  const availableTypes = ['Commercial', 'Residential', 'Irrigation', 'Common', 'Building', 'Bulk']
 
   if (loading) {
     return <div className="text-center p-8">Loading consumption analysis...</div>
