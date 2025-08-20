@@ -1,7 +1,31 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Calendar, RefreshCw, Download, Droplets, Sprout, Truck, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Calendar, RefreshCw, Download, Droplets, Sprout, Truck, DollarSign, TrendingUp, BarChart3, Filter } from 'lucide-react';
+import { useSTPData } from '../../hooks/useSTPData';
+
+// Enhanced CSS for slider styling
+const sliderStyles = `
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #10B981;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slider::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: #10B981;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+`;
 
 // Custom Tooltip Component
 const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string | number }) => {
@@ -24,12 +48,17 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?:
     return null;
 };
 
-// Date Range Slider Component
-const DateRangeSlider = ({ dateRange, onDateRangeChange, availableDates }: any) => {
+// Enhanced Date Range Slider Component with Full Integration
+const DateRangeSlider = ({ dateRange, onDateRangeChange, availableDates, filteredDataCount }: any) => {
+    const [sliderValue, setSliderValue] = useState(0);
+    
     const handleRangeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = parseInt(e.target.value);
-        const startIndex = Math.floor(value * (availableDates.length - 1) / 100);
-        const endIndex = availableDates.length - 1;
+        setSliderValue(value);
+        
+        const totalMonths = availableDates.length - 1;
+        const startIndex = Math.floor((value / 100) * totalMonths);
+        const endIndex = totalMonths;
         
         onDateRangeChange({
             start: availableDates[startIndex],
@@ -37,8 +66,25 @@ const DateRangeSlider = ({ dateRange, onDateRangeChange, availableDates }: any) 
         });
     };
 
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newStart = e.target.value;
+        onDateRangeChange({...dateRange, start: newStart});
+        
+        // Update slider position based on new start date
+        const startIndex = availableDates.indexOf(newStart);
+        if (startIndex !== -1) {
+            const newSliderValue = (startIndex / (availableDates.length - 1)) * 100;
+            setSliderValue(newSliderValue);
+        }
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onDateRangeChange({...dateRange, end: e.target.value});
+    };
+
     const resetRange = () => {
         if (availableDates.length > 0) {
+            setSliderValue(0);
             onDateRangeChange({
                 start: availableDates[0],
                 end: availableDates[availableDates.length - 1]
@@ -46,101 +92,174 @@ const DateRangeSlider = ({ dateRange, onDateRangeChange, availableDates }: any) 
         }
     };
 
+    const getSelectedPeriodText = () => {
+        const startDate = new Date(dateRange.start + '-01');
+        const endDate = new Date(dateRange.end + '-01');
+        const startText = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const endText = endDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        return `${startText} - ${endText}`;
+    };
+
+    const getSliderBackground = () => {
+        const percentage = sliderValue;
+        return `linear-gradient(to right, #e5e7eb 0%, #e5e7eb ${percentage}%, #10B981 ${percentage}%, #10B981 100%)`;
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Period Range</h3>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Filter className="w-5 h-5 text-blue-500" />
+                        Smart Filtration System
+                    </h3>
+                    <p className="text-sm text-gray-600">All components below will update automatically</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm text-gray-600">Filtered Records</p>
+                    <p className="text-2xl font-bold text-blue-600">{filteredDataCount}</p>
+                </div>
+            </div>
             
-            <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+            <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
                 <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700">From:</label>
                     <input
                         type="month"
                         value={dateRange.start}
-                        onChange={(e) => onDateRangeChange({...dateRange, start: e.target.value})}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={handleStartDateChange}
+                        min="2024-07"
+                        max="2025-07"
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
-                    <span className="text-gray-500">to</span>
+                    <span className="text-gray-500 mx-2">to</span>
+                    <label className="text-sm font-medium text-gray-700">To:</label>
                     <input
                         type="month"
                         value={dateRange.end}
-                        onChange={(e) => onDateRangeChange({...dateRange, end: e.target.value})}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={handleEndDateChange}
+                        min={dateRange.start}
+                        max="2025-07"
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
                 </div>
                 
                 <button 
                     onClick={resetRange}
-                    className="bg-[#10B981] text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors flex items-center gap-2"
+                    className="bg-[#10B981] text-white px-4 py-2 rounded-md hover:bg-green-600 transition-all duration-200 flex items-center gap-2 text-sm font-medium"
                 >
                     <RefreshCw className="w-4 h-4" />
-                    Reset Range
+                    Reset to Full Range
                 </button>
             </div>
             
-            {/* Visual Slider */}
-            <div className="relative">
+            {/* Enhanced Visual Slider */}
+            <div className="relative mb-4">
                 <input
                     type="range"
                     min="0"
                     max="100"
-                    defaultValue="0"
+                    value={sliderValue}
                     onChange={handleRangeChange}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-3 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                        background: 'linear-gradient(to right, #10B981 0%, #10B981 100%, #e5e7eb 100%, #e5e7eb 100%)'
+                        background: getSliderBackground()
                     }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-2">
-                    <span>2024-07</span>
-                    <span>2025-01</span>
-                    <span>2025-07</span>
+                    <span>Jul 2024</span>
+                    <span>Jan 2025</span>
+                    <span>Jul 2025</span>
                 </div>
             </div>
             
-            <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Selected Period</p>
-                <p className="font-semibold text-gray-900">July 2024 - July 2025</p>
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
+                <p className="text-sm text-gray-600 mb-1">Currently Viewing</p>
+                <p className="font-semibold text-gray-900 text-lg">{getSelectedPeriodText()}</p>
+                <p className="text-xs text-blue-600 mt-1">
+                    All charts, metrics, and tables below are filtered to this period
+                </p>
             </div>
         </div>
     );
 };
 
-// KPI Metric Card Component
-const MetricCard = ({ icon, title, value, unit, period, bgColor, iconColor }: any) => (
-    <div className={`rounded-lg p-4 ${bgColor} border border-gray-200`}>
-        <div className="flex items-center gap-3">
-            <div 
-                className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-lg`}
-                style={{ backgroundColor: iconColor }}
-            >
-                {icon}
-            </div>
-            <div className="flex-1">
-                <p className="text-xs font-medium text-gray-600 uppercase tracking-wide">{title}</p>
-                <p className="text-2xl font-bold text-gray-900">
-                    {value} <span className="text-sm font-normal text-gray-600">{unit}</span>
-                </p>
-                <p className="text-xs text-gray-500">{period}</p>
-            </div>
-        </div>
-    </div>
-);
+// Import the new UI components - Fixed import path
+import { KpiCard } from './ui/KpiCard';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
 
-// Daily Operations Table Component
-const DailyOperationsTable = ({ data, currentMonth }: any) => {
+// KPI Metric Card Component (Updated to use new design system)
+const MetricCard = ({ icon, title, value, unit, period, bgColor, iconColor }: any) => {
+    // Map hex colors to theme color names
+    const getColorName = (hexColor: string) => {
+        switch (hexColor) {
+            case '#3B82F6': return 'blue';      // Blue
+            case '#10B981': return 'green';     // Green
+            case '#6B7280': return 'indigo';    // Gray -> Indigo
+            case '#0EA5E9': return 'blue';      // Sky blue -> Blue
+            case '#06B6D4': return 'teal';      // Teal
+            default: return 'blue';             // Default fallback
+        }
+    };
+
+    return (
+        <KpiCard
+            title={title}
+            value={value}
+            unit={unit}
+            subtitle={period}
+            icon={icon}
+            color={getColorName(iconColor)}
+            variant="default"
+            size="md"
+        />
+    );
+};
+
+// Enhanced Daily Operations Table Component with Date Range Integration
+const DailyOperationsTable = ({ data, dateRange }: any) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
+    const [sortField, setSortField] = useState('operation_date');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+    const itemsPerPage = 15;
     
-    // Filter data for current month
-    const monthlyData = data.filter((record: any) => {
-        const recordDate = new Date(record.operation_date);
-        const currentMonthDate = new Date(currentMonth);
-        return recordDate.getMonth() === currentMonthDate.getMonth() && 
-               recordDate.getFullYear() === currentMonthDate.getFullYear();
-    });
+    // Filter data based on date range (not just current month)
+    const filteredData = useMemo(() => {
+        return data.filter((record: any) => {
+            const recordDate = new Date(record.operation_date);
+            const startDate = new Date(dateRange.start + '-01');
+            const endDate = new Date(dateRange.end + '-31'); // End of month
+            return recordDate >= startDate && recordDate <= endDate;
+        });
+    }, [data, dateRange]);
     
-    const totalPages = Math.ceil(monthlyData.length / itemsPerPage);
+    // Sort filtered data
+    const sortedData = useMemo(() => {
+        return [...filteredData].sort((a, b) => {
+            const aValue = a[sortField];
+            const bValue = b[sortField];
+            
+            if (sortField === 'operation_date') {
+                const aDate = new Date(aValue);
+                const bDate = new Date(bValue);
+                return sortDirection === 'asc' ? aDate.getTime() - bDate.getTime() : bDate.getTime() - aDate.getTime();
+            }
+            
+            const aNum = Number(aValue) || 0;
+            const bNum = Number(bValue) || 0;
+            return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+        });
+    }, [filteredData, sortField, sortDirection]);
+    
+    const totalPages = Math.ceil(sortedData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentPageData = monthlyData.slice(startIndex, startIndex + itemsPerPage);
+    const currentPageData = sortedData.slice(startIndex, startIndex + itemsPerPage);
+    
+    // Reset page when date range changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [dateRange]);
     
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-GB');
@@ -150,11 +269,25 @@ const DailyOperationsTable = ({ data, currentMonth }: any) => {
         return value?.toFixed(2) || '0.00';
     };
     
+    const handleSort = (field: string) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('desc');
+        }
+    };
+
+    const getSortIcon = (field: string) => {
+        if (sortField !== field) return '↕️';
+        return sortDirection === 'asc' ? '↑' : '↓';
+    };
+
     const exportToCSV = () => {
         const headers = ['Date', 'Inlet (m³)', 'TSE (m³)', 'Tankers', 'Income (OMR)', 'Savings (OMR)', 'Total (OMR)'];
         const csvContent = [
             headers.join(','),
-            ...monthlyData.map((record: any) => [
+            ...sortedData.map((record: any) => [
                 formatDate(record.operation_date),
                 record.total_inlet_sewage || 0,
                 record.tse_water_to_irrigation || 0,
@@ -169,7 +302,7 @@ const DailyOperationsTable = ({ data, currentMonth }: any) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `stp_operations_${currentMonth.replace('-', '_')}.csv`;
+        a.download = `stp_operations_${dateRange.start}_to_${dateRange.end}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
     };
@@ -178,31 +311,75 @@ const DailyOperationsTable = ({ data, currentMonth }: any) => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Daily Operations Log</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-blue-500" />
+                        Daily Operations Log
+                    </h3>
                     <p className="text-sm text-gray-600">
-                        Daily Operations for {new Date(currentMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        Showing {sortedData.length} records from {new Date(dateRange.start + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} to {new Date(dateRange.end + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                     </p>
                 </div>
-                <button 
-                    onClick={exportToCSV}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
-                >
-                    <Download className="w-4 h-4" />
-                    Export CSV
-                </button>
+                <div className="flex gap-2">
+                    <div className="text-right mr-4">
+                        <p className="text-xs text-gray-500">Filtered Records</p>
+                        <p className="text-lg font-bold text-blue-600">{sortedData.length}</p>
+                    </div>
+                    <button 
+                        onClick={exportToCSV}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    >
+                        <Download className="w-4 h-4" />
+                        Export Filtered Data
+                    </button>
+                </div>
             </div>
             
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Inlet (m³)</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">TSE (m³)</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tankers</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Income (OMR)</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Savings (OMR)</th>
-                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-bold">Total (OMR)</th>
+                            <th 
+                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('operation_date')}
+                            >
+                                Date {getSortIcon('operation_date')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('total_inlet_sewage')}
+                            >
+                                Inlet (m³) {getSortIcon('total_inlet_sewage')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('tse_water_to_irrigation')}
+                            >
+                                TSE (m³) {getSortIcon('tse_water_to_irrigation')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('tankers_discharged')}
+                            >
+                                Tankers {getSortIcon('tankers_discharged')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('income_from_tankers')}
+                            >
+                                Income (OMR) {getSortIcon('income_from_tankers')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('saving_from_tse')}
+                            >
+                                Savings (OMR) {getSortIcon('saving_from_tse')}
+                            </th>
+                            <th 
+                                className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-bold cursor-pointer hover:bg-gray-100 transition-colors"
+                                onClick={() => handleSort('total_saving_income')}
+                            >
+                                Total (OMR) {getSortIcon('total_saving_income')}
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -224,21 +401,28 @@ const DailyOperationsTable = ({ data, currentMonth }: any) => {
             {/* Pagination */}
             <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                    Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, monthlyData.length)} of {monthlyData.length} entries
+                    Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedData.length)} of {sortedData.length} filtered entries
+                    {sortedData.length !== data.length && (
+                        <span className="text-blue-600 ml-2">
+                            (filtered from {data.length} total records)
+                        </span>
+                    )}
                 </div>
                 <div className="flex gap-2">
                     <button 
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         Previous
                     </button>
-                    <span className="px-3 py-1 text-sm">Page {currentPage} of {totalPages}</span>
+                    <span className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-md">
+                        Page {currentPage} of {totalPages || 1}
+                    </span>
                     <button 
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         Next
                     </button>
@@ -248,87 +432,45 @@ const DailyOperationsTable = ({ data, currentMonth }: any) => {
     );
 };
 
-// Main STP Operations Dashboard Component
+// Main STP Operations Dashboard Component with Enhanced Integration
 export const EnhancedSTPModule = () => {
-    const [data, setData] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [dateRange, setDateRange] = useState({
-        start: '2024-07',
-        end: '2025-07'
-    });
-    
-    useEffect(() => {
-        fetchSTPData();
-        const interval = setInterval(fetchSTPData, 5 * 60 * 1000); // Auto-refresh every 5 minutes
-        return () => clearInterval(interval);
-    }, []);
-    
-    const fetchSTPData = async () => {
-        try {
-            setLoading(true);
-            const { data: fetchedData, error } = await supabase
-                .from('stp_operations')
-                .select('*')
-                .gte('operation_date', `${dateRange.start}-01`)
-                .lte('operation_date', `${dateRange.end}-31`)
-                .order('operation_date', { ascending: false });
-            
-            if (error) throw error;
-            
-            // Auto-calculate financial fields if null
-            const processedData = (fetchedData || []).map(record => ({
-                ...record,
-                income_from_tankers: record.income_from_tankers || (record.tankers_discharged * 5), // 5 OMR per tanker
-                saving_from_tse: record.saving_from_tse || (record.tse_water_to_irrigation * 0.45), // 0.45 OMR per m³
-                total_saving_income: record.total_saving_income || 
-                    ((record.income_from_tankers || (record.tankers_discharged * 5)) + 
-                     (record.saving_from_tse || (record.tse_water_to_irrigation * 0.45)))
-            }));
-            
-            setData(processedData);
-        } catch (error) {
-            console.error('Error fetching STP data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    // Calculate metrics
-    const metrics = useMemo(() => {
-        return {
-            totalInletSewage: data.reduce((sum, d) => sum + (Number(d.total_inlet_sewage) || 0), 0),
-            totalTSE: data.reduce((sum, d) => sum + (Number(d.tse_water_to_irrigation) || 0), 0),
-            totalTankers: data.reduce((sum, d) => sum + (d.tankers_discharged || 0), 0),
-            totalIncome: data.reduce((sum, d) => sum + (Number(d.income_from_tankers) || 0), 0),
-            totalSavings: data.reduce((sum, d) => sum + (Number(d.saving_from_tse) || 0), 0),
-            totalImpact: data.reduce((sum, d) => sum + (Number(d.total_saving_income) || 0), 0)
-        };
-    }, [data]);
-    
-    // Group data by month for charts
-    const monthlyData = useMemo(() => {
-        const grouped = data.reduce((acc: any, record) => {
-            const month = new Date(record.operation_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-            if (!acc[month]) {
-                acc[month] = {
-                    month,
-                    sewageInput: 0,
-                    tseOutput: 0,
-                    tankerTrips: 0,
-                    income: 0,
-                    savings: 0
-                };
-            }
-            acc[month].sewageInput += Number(record.total_inlet_sewage) || 0;
-            acc[month].tseOutput += Number(record.tse_water_to_irrigation) || 0;
-            acc[month].tankerTrips += record.tankers_discharged || 0;
-            acc[month].income += Number(record.income_from_tankers) || 0;
-            acc[month].savings += Number(record.saving_from_tse) || 0;
-            return acc;
-        }, {});
-        
-        return Object.values(grouped).sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime());
-    }, [data]);
+    // Use the custom hook for centralized state management
+    let hookData;
+    try {
+        hookData = useSTPData();
+    } catch (error) {
+        console.error('Failed to initialize STP data hook:', error);
+        // Return fallback component if hook fails
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8 max-w-md mx-auto text-center">
+                    <div className="text-orange-500 text-6xl mb-4">⚠️</div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">STP Data Hook Failed</h2>
+                    <p className="text-gray-600 mb-4">Unable to initialize data management system.</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        Reload Page
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const {
+        allData,
+        filteredData,
+        monthlyData,
+        loading,
+        error,
+        lastFetchTime,
+        dateRange,
+        availableDates,
+        metrics,
+        handleDateRangeChange,
+        refetch
+    } = hookData;
     
     const formatNumber = (num: number) => num.toLocaleString();
     const formatCurrency = (num: number) => num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -339,6 +481,25 @@ export const EnhancedSTPModule = () => {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading STP operations data...</p>
+                    <p className="text-sm text-gray-500 mt-2">Preparing smart filtration system...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
+                    <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                    <p className="text-red-600 font-semibold">Error loading STP data</p>
+                    <p className="text-gray-500 mt-2">{error}</p>
+                    <button 
+                        onClick={refetch}
+                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                        Retry
+                    </button>
                 </div>
             </div>
         );
@@ -346,50 +507,61 @@ export const EnhancedSTPModule = () => {
     
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
+            <style>{sliderStyles}</style>
+            {/* Enhanced Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-4">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">STP Plant Operations</h1>
-                        <p className="text-gray-600">Sewage Treatment Plant Management</p>
+                        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                            <Droplets className="w-8 h-8 text-blue-500" />
+                            STP Plant Smart Operations
+                        </h1>
+                        <p className="text-gray-600">Sewage Treatment Plant with Integrated Filtration System</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm text-gray-500">Last Updated</p>
+                        <p className="text-sm font-medium text-gray-900">
+                            {lastFetchTime ? lastFetchTime.toLocaleString() : 'Loading...'}
+                        </p>
                     </div>
                 </div>
             </div>
             
             <div className="p-6">
-                {/* Date Range Selector */}
+                {/* Enhanced Date Range Selector */}
                 <DateRangeSlider 
                     dateRange={dateRange}
-                    onDateRangeChange={setDateRange}
-                    availableDates={['2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06', '2025-07']}
+                    onDateRangeChange={handleDateRangeChange}
+                    availableDates={availableDates}
+                    filteredDataCount={filteredData.length}
                 />
                 
                 {/* KPI Metrics - Row 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <MetricCard 
-                        icon="💧"
+                        icon={Droplets}
                         title="INLET SEWAGE"
                         value={formatNumber(metrics.totalInletSewage)}
                         unit="m³"
-                        period="For July 2024 - July 2025"
+                        period={`For ${new Date(dateRange.start + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - ${new Date(dateRange.end + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
                         bgColor="bg-blue-50"
                         iconColor="#3B82F6"
                     />
                     <MetricCard 
-                        icon="🌱"
+                        icon={Sprout}
                         title="TSE FOR IRRIGATION"
                         value={formatNumber(metrics.totalTSE)}
                         unit="m³"
-                        period="Recycled water"
+                        period="Recycled water (filtered period)"
                         bgColor="bg-green-50"
                         iconColor="#10B981"
                     />
                     <MetricCard 
-                        icon="🚛"
+                        icon={Truck}
                         title="TANKER TRIPS"
                         value={formatNumber(metrics.totalTankers)}
                         unit="trips"
-                        period="Total discharges"
+                        period="Total discharges (filtered period)"
                         bgColor="bg-gray-50"
                         iconColor="#6B7280"
                     />
@@ -398,29 +570,29 @@ export const EnhancedSTPModule = () => {
                 {/* KPI Metrics - Row 2 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <MetricCard 
-                        icon="💰"
+                        icon={DollarSign}
                         title="GENERATED INCOME"
                         value={formatCurrency(metrics.totalIncome)}
                         unit="OMR"
-                        period="From tanker fees"
+                        period="From tanker fees (filtered period)"
                         bgColor="bg-gray-50"
                         iconColor="#6B7280"
                     />
                     <MetricCard 
-                        icon="💧"
+                        icon={Droplets}
                         title="WATER SAVINGS"
                         value={formatCurrency(metrics.totalSavings)}
                         unit="OMR"
-                        period="By using TSE water"
+                        period="By using TSE water (filtered period)"
                         bgColor="bg-cyan-50"
                         iconColor="#0EA5E9"
                     />
                     <MetricCard 
-                        icon="📊"
+                        icon={TrendingUp}
                         title="TOTAL IMPACT"
                         value={formatCurrency(metrics.totalImpact)}
                         unit="OMR"
-                        period="Savings + Income"
+                        period="Savings + Income (filtered period)"
                         bgColor="bg-teal-50"
                         iconColor="#06B6D4"
                     />
@@ -521,7 +693,7 @@ export const EnhancedSTPModule = () => {
                 </div>
                 
                 {/* Daily Operations Table */}
-                <DailyOperationsTable data={data} currentMonth="2025-07" />
+                <DailyOperationsTable data={allData} dateRange={dateRange} />
             </div>
         </div>
     );

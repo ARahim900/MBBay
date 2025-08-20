@@ -8,6 +8,8 @@ import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
 import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
 import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
+import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
+import { STPErrorBoundary } from './src/components/STPErrorBoundary';
 
 
 // -- STATE MANAGEMENT (ZUSTAND) --
@@ -29,20 +31,8 @@ const useAppStore = create<AppState>((set) => ({
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 }));
 
-// -- REUSABLE UI COMPONENTS --
-const Card = ({ children, className = '' }) => {
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => {
-        const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
-        return () => clearTimeout(timer);
-    }, []);
-
-    return (
-        <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
-            {children}
-        </div>
-    );
-};
+// Import the new UI components
+import { Card, KpiCard, Button, Sidebar, ModernAreaChart, DonutChart } from './src/components/ui';
 
 // -- WATER MODULE MOCK DATA (DERIVED FROM SCREENSHOTS) --
 const overviewConsumptionData = [
@@ -732,7 +722,26 @@ const ContractorModule = () => {
 
 // -- STP PLANT MODULE --
 const STPPlantModule = () => {
-    return <EnhancedSTPModule />;
+    const [useBackup, setUseBackup] = useState(false);
+
+    if (useBackup) {
+        return <SimpleSTPModuleBackup />;
+    }
+
+    return (
+        <STPErrorBoundary>
+            <React.Suspense fallback={
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading STP operations data...</p>
+                    </div>
+                </div>
+            }>
+                <EnhancedSTPModule />
+            </React.Suspense>
+        </STPErrorBoundary>
+    );
 };
 
 
