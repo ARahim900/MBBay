@@ -192,31 +192,48 @@ export const getMonthlyBreakdown = (meters: WaterMeter[], startMonth: number, en
       
       const meterType = m.type.toLowerCase()
       
-      // Handle different possible type names (matches validation logic)
+      // Handle different possible type names (matches database types)
       if (searchType === 'irrigation') {
-        return meterType.includes('irrigation') || 
+        return meterType.includes('irr_servies') || 
+               meterType.includes('irrigation') || 
                meterType.includes('irrigat') || 
                meterType.includes('garden') ||
                meterType.includes('landscape')
       }
       
       if (searchType === 'commercial') {
-        return meterType.includes('commercial') || 
+        return meterType.includes('retail') ||
+               meterType.includes('commercial') || 
                meterType.includes('business') ||
                meterType.includes('office')
       }
       
       if (searchType === 'residential') {
         return meterType.includes('residential') || 
+               meterType.includes('villa') ||
+               meterType.includes('apart') ||
                meterType.includes('house') ||
-               meterType.includes('home') ||
-               meterType.includes('villa')
+               meterType.includes('home')
       }
       
       if (searchType === 'common') {
-        return meterType.includes('common') || 
+        return meterType.includes('mb_common') ||
+               meterType.includes('d_building_common') ||
+               meterType.includes('common') || 
                meterType.includes('shared') ||
                meterType.includes('community')
+      }
+      
+      if (searchType === 'building') {
+        return meterType.includes('building') ||
+               meterType.includes('d_building') ||
+               meterType.includes('structure')
+      }
+      
+      if (searchType === 'bulk') {
+        return meterType.includes('bulk') ||
+               meterType.includes('main bulk') ||
+               meterType.includes('zone bulk')
       }
       
       // Fallback to partial match
