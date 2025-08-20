@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { create } from 'zustand';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from 'recharts';
 import { Bell, Droplets, Flame, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle } from 'lucide-react';
+import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
+import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
+import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 
 
 // -- STATE MANAGEMENT (ZUSTAND) --
@@ -503,44 +506,9 @@ const MainDatabase = () => {
     );
 };
 
-// -- WATER MODULE --
+// -- WATER MODULE (Enhanced with Supabase) --
 const WaterModule = () => {
-    const [activeSubModule, setActiveSubModule] = useState('Overview');
-    const subNavItems = [
-        { name: 'Overview', icon: LayoutDashboard }, { name: 'Water Loss Analysis', icon: TrendingDown },
-        { name: 'Zone Analysis', icon: MapPin }, { name: 'Consumption by Type', icon: PieIcon },
-        { name: 'Main Database', icon: Database },
-    ];
-    const renderSubModule = () => {
-        switch (activeSubModule) {
-            case 'Overview': return <WaterOverview />;
-            case 'Zone Analysis': return <ZoneAnalysis />;
-            case 'Consumption by Type': return <ConsumptionByType />;
-            case 'Main Database': return <MainDatabase />;
-            default: return <div className="text-center p-8 bg-gray-100 dark:bg-white/5 rounded-lg">Component for "{activeSubModule}" is under construction.</div>;
-        }
-    };
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                 <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Water System Analysis</h2>
-                 <p className="text-sm text-gray-500">Muscat Bay Ressource Management</p>
-            </div>
-            <Card className="mb-6">
-                <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-2">
-                    {subNavItems.map(({ name, icon: Icon }) => (
-                        <button key={name} onClick={() => setActiveSubModule(name)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:bg-gray-100 dark:hover:bg-white/10 ${
-                                activeSubModule === name ? 'bg-gray-200 dark:bg-white/20 text-[#4E4456] dark:text-white shadow-inner' : 'text-gray-600 dark:text-gray-300'
-                            }`}>
-                            <Icon className="h-5 w-5" /> {name}
-                        </button>
-                    ))}
-                </div>
-            </Card>
-            {renderSubModule()}
-        </div>
-    );
+    return <EnhancedWaterModule />;
 };
 
 
@@ -559,123 +527,14 @@ const electricityConsumptionByTypeData = [
 ];
 
 const ElectricityModule = () => {
-    const [activeSubModule, setActiveSubModule] = useState('Overview');
-    const subNavItems = [
-        { name: 'Overview', icon: LayoutDashboard },
-        { name: 'Analysis by Type', icon: PieIcon },
-        { name: 'Database', icon: Database },
-    ];
-    
-    const kpis = [
-        { title: "TOTAL CONSUMPTION", value: "2130.3 MWh", subValue: "2,130,302.2 kWh", color: "bg-green-100", iconColor: "text-green-500", icon: TrendingUp },
-        { title: "TOTAL COST", value: "53,259 OMR", subValue: "Based on total consumption", color: "bg-blue-100", iconColor: "text-blue-500", icon: Droplets },
-        { title: "TOTAL METERS", value: "57 meters", subValue: "All meter types", color: "bg-yellow-100", iconColor: "text-yellow-500", icon: Settings },
-        { title: "HIGHEST CONSUMER", value: "Beachwell", subValue: "392,489 kWh / 9,812 OMR", color: "bg-red-100", iconColor: "text-red-500", icon: User },
-    ];
-
-    const OverviewContent = () => (
-        <div className="space-y-6">
-            <Card>
-                <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-2">Consumption Overview for Apr-24 to Jul-25</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                     {kpis.map(kpi => (
-                         <div key={kpi.title} className={`p-4 rounded-lg ${kpi.color} dark:bg-white/5`}>
-                             <div className="flex items-center gap-4">
-                                <div className={`${kpi.iconColor.replace('text-','bg-')}/20 p-2 rounded-lg`}><kpi.icon className={`w-6 h-6 ${kpi.iconColor}`} /></div>
-                                 <div>
-                                     <p className="text-xs text-gray-500">{kpi.title}</p>
-                                     <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi.value}</p>
-                                     <p className="text-xs text-gray-400">{kpi.subValue}</p>
-                                 </div>
-                             </div>
-                         </div>
-                     ))}
-                 </div>
-            </Card>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Consumption Trend (kWh)</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                         <AreaChart data={electricityConsumptionTrendData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <defs>
-                                <linearGradient id="colorElec" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.7}/>
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" />
-                            <XAxis dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Area type="monotone" dataKey="kWh" stroke="#8b5cf6" strokeWidth={2} fill="url(#colorElec)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </Card>
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Consumption by Type</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={electricityConsumptionByTypeData} layout="vertical" margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(200, 200, 200, 0.1)" />
-                            <XAxis type="number" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={{ stroke: '#9E9AA7', strokeWidth: 1 }} />
-                            <YAxis type="category" dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} width={80} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="value" name="kWh" radius={[0, 8, 8, 0]}>
-                                {electricityConsumptionByTypeData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Card>
-            </div>
-        </div>
-    );
-
-    return (
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Electricity System Analysis</h2>
-            </div>
-            <div className="flex justify-center mb-6">
-                 <div className="flex flex-wrap items-center justify-center p-1 rounded-xl bg-gray-100 dark:bg-white/10 gap-x-1">
-                    {subNavItems.map(({ name, icon: Icon }) => (
-                        <button key={name} onClick={() => setActiveSubModule(name)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                activeSubModule === name ? 'bg-white dark:bg-white/20 text-[#4E4456] dark:text-white shadow-sm' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-white/5'
-                            }`}>
-                            <Icon className="h-5 w-5" /> {name}
-                        </button>
-                    ))}
-                </div>
-            </div>
-             <Card>
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-4">
-                        <input type="text" value="Apr-24" readOnly className="p-2 border rounded-md w-28 text-center bg-gray-50 dark:bg-white/10" />
-                        <span>to</span>
-                        <input type="text" value="Jul-25" readOnly className="p-2 border rounded-md w-28 text-center bg-gray-50 dark:bg-white/10" />
-                        <button className="text-gray-500 hover:text-gray-800 transition-transform duration-200 hover:rotate-90"><RefreshCw className="w-5 h-5" /></button>
-                    </div>
-                </div>
-            </Card>
-            <div className="mt-6">
-                {activeSubModule === 'Overview' ? <OverviewContent /> : <div className="text-center p-8 bg-gray-100 dark:bg-white/5 rounded-lg">Component for "{activeSubModule}" is under construction.</div>}
-            </div>
-        </div>
-    );
+    return <EnhancedElectricityModule />;
 };
 
 
-// -- HVAC MODULE (Placeholder) --
-const HVACModule = () => (
-    <Card>
-        <div className="text-center p-8">
-            <BarChart2 className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-semibold text-[#4E4456] dark:text-white">HVAC System Management</h3>
-            <p className="mt-1 text-sm text-gray-500">This module is under construction.</p>
-        </div>
-    </Card>
-);
+// -- HVAC MODULE --
+const HVACModule = () => {
+    return <EnhancedHVACModule />;
+};
 
 // -- FIREFIGHTING & ALARM MODULE --
 const firefightingKpis = [
