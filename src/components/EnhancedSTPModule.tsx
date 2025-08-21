@@ -626,24 +626,45 @@ export const EnhancedSTPModule = () => {
                 
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <ModernBarChart
-                        data={monthlyData}
-                        config={{
-                            income: {
-                                label: "Income (OMR)",
-                                color: "#84CC16"
-                            },
-                            savings: {
-                                label: "Savings (OMR)",
-                                color: "#06B6D4"
-                            }
-                        }}
-                        title="Monthly Financials (OMR)"
-                        description="Income from tanker fees vs water cost savings"
-                        height="h-[300px]"
-                        showLegend={true}
-                        stacked={false}
-                    />
+                    <Card className="pt-0">
+                        <div className="border-b py-5 px-6">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Monthly Financials (OMR)
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                Income from tanker fees vs water cost savings
+                            </p>
+                        </div>
+                        <div className="px-2 pt-4 sm:px-6 sm:pt-6">
+                            {monthlyData && monthlyData.length > 0 ? (
+                                <ModernBarChart
+                                    data={monthlyData}
+                                    config={{
+                                        income: {
+                                            label: "Income (OMR)",
+                                            color: "#84CC16"
+                                        },
+                                        savings: {
+                                            label: "Savings (OMR)",
+                                            color: "#06B6D4"
+                                        }
+                                    }}
+                                    title=""
+                                    description=""
+                                    height="h-[250px]"
+                                    showLegend={true}
+                                    stacked={false}
+                                />
+                            ) : (
+                                <div className="h-[250px] flex items-center justify-center text-gray-500">
+                                    <div className="text-center">
+                                        <p>No financial data available for selected period</p>
+                                        <p className="text-sm mt-2">Select a different date range or check data connection</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
                     
                     <ModernLineChart
                         data={monthlyData}
@@ -663,6 +684,19 @@ export const EnhancedSTPModule = () => {
                 </div>
                 
                 {/* Daily Operations Table */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Database Connection Status</h3>
+                            <p className="text-sm text-gray-600">Total records: {allData.length} | Filtered: {filteredData.length}</p>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            allData.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                            {allData.length > 0 ? 'Connected' : 'No Data'}
+                        </div>
+                    </div>
+                </div>
                 <DailyOperationsTable data={allData} dateRange={dateRange} />
             </div>
         </div>

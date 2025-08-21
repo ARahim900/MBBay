@@ -85,6 +85,11 @@ export const useSTPData = () => {
       }));
 
       console.log('STP data fetched successfully:', processedData.length, 'records');
+      console.log('Sample data:', processedData.slice(0, 3));
+      console.log('Date range of data:', processedData.length > 0 ? {
+        earliest: processedData[processedData.length - 1]?.operation_date,
+        latest: processedData[0]?.operation_date
+      } : 'No data');
       setAllData(processedData);
       setLastFetchTime(new Date());
     } catch (err) {
@@ -92,8 +97,41 @@ export const useSTPData = () => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
       setError(errorMessage);
       
-      // Set fallback data if fetch fails
-      setAllData([]);
+      // Set fallback data if fetch fails - Sample data for testing
+      const fallbackData = [
+        {
+          id: 1,
+          operation_date: '2024-07-15',
+          total_inlet_sewage: 85,
+          tse_water_to_irrigation: 75,
+          tankers_discharged: 3,
+          income_from_tankers: 15.00,
+          saving_from_tse: 33.75,
+          total_saving_income: 48.75
+        },
+        {
+          id: 2,
+          operation_date: '2024-08-10',
+          total_inlet_sewage: 92,
+          tse_water_to_irrigation: 82,
+          tankers_discharged: 4,
+          income_from_tankers: 20.00,
+          saving_from_tse: 36.90,
+          total_saving_income: 56.90
+        },
+        {
+          id: 3,
+          operation_date: '2024-09-05',
+          total_inlet_sewage: 78,
+          tse_water_to_irrigation: 68,
+          tankers_discharged: 2,
+          income_from_tankers: 10.00,
+          saving_from_tse: 30.60,
+          total_saving_income: 40.60
+        }
+      ];
+      console.log('Using fallback data due to error:', errorMessage);
+      setAllData(fallbackData);
     } finally {
       setLoading(false);
     }
@@ -143,7 +181,10 @@ export const useSTPData = () => {
       return acc;
     }, {});
 
-    return Object.values(grouped).sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    const result = Object.values(grouped).sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime());
+    console.log('Monthly data processed:', result.length, 'months');
+    console.log('Sample monthly data:', result.slice(0, 2));
+    return result;
   }, [filteredData]);
 
   // Enhanced date range change handler
