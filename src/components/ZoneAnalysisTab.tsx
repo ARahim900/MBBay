@@ -78,6 +78,8 @@ export const ZoneAnalysisTab = () => {
   const [monthlyTrend, setMonthlyTrend] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Load initial data
   useEffect(() => {
@@ -101,6 +103,7 @@ export const ZoneAnalysisTab = () => {
     if (waterMeters.length === 0) return
 
     setIsAnimating(true)
+    setCurrentPage(1) // Reset to first page when filters change
     
     setTimeout(() => {
       // Calculate zone data for the selected month (single month range)
@@ -295,13 +298,13 @@ export const ZoneAnalysisTab = () => {
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
               <tr>
-                {['Meter Label', 'Account #', 'Type', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Total', 'Status'].map(h => 
+                {['Meter Label', 'Account #', 'Type', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25', 'Total', 'Status'].map(h => 
                   <th key={h} className="px-4 py-3">{h}</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {/* Zone bulk meter row */}
+              {/* Zone bulk meter row - always show at top */}
               {zoneData.bulkMeters?.map((meter: WaterMeter) => (
                 <tr key={meter.id} className="bg-blue-50 dark:bg-blue-500/10 font-semibold">
                   <td className="px-4 py-2">{meter.meter_label}</td>
@@ -312,47 +315,171 @@ export const ZoneAnalysisTab = () => {
                   <td className="px-4 py-2">{meter.mar_25?.toLocaleString()}</td>
                   <td className="px-4 py-2">{meter.apr_25?.toLocaleString()}</td>
                   <td className="px-4 py-2">{meter.may_25?.toLocaleString()}</td>
-                  <td className="px-4 py-2">{(meter.jan_25 + meter.feb_25 + meter.mar_25 + meter.apr_25 + meter.may_25 + meter.jun_25).toLocaleString()}</td>
+                  <td className="px-4 py-2">{meter.jun_25?.toLocaleString()}</td>
+                  <td className="px-4 py-2">{meter.jul_25?.toLocaleString()}</td>
+                  <td className="px-4 py-2">{(meter.jan_25 + meter.feb_25 + meter.mar_25 + meter.apr_25 + meter.may_25 + meter.jun_25 + meter.jul_25).toLocaleString()}</td>
                   <td className="px-4 py-2 text-blue-600">L2 - Zone Bulk</td>
                 </tr>
               ))}
               
-              {/* Individual meters */}
-              {zoneData.individualMeters?.slice(0, 10).map((meter: WaterMeter) => {
-                const total = meter.jan_25 + meter.feb_25 + meter.mar_25 + meter.apr_25 + meter.may_25 + meter.jun_25
-                const status = total > 10 ? 'Normal' : 'No Usage'
+              {/* Individual meters with pagination */}
+              {(() => {
+                const individualMeters = zoneData.individualMeters || []
+                const totalPages = Math.ceil(individualMeters.length / itemsPerPage)
+                const startIndex = (currentPage - 1) * itemsPerPage
+                const endIndex = startIndex + itemsPerPage
+                const currentMeters = individualMeters.slice(startIndex, endIndex)
                 
-                return (
-                  <tr key={meter.id} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                    <td className="px-4 py-2 font-medium">{meter.meter_label}</td>
-                    <td className="px-4 py-2">{meter.account_number}</td>
-                    <td className="px-4 py-2">{meter.type}</td>
-                    <td className="px-4 py-2">{meter.jan_25}</td>
-                    <td className="px-4 py-2">{meter.feb_25}</td>
-                    <td className="px-4 py-2">{meter.mar_25}</td>
-                    <td className="px-4 py-2">{meter.apr_25}</td>
-                    <td className="px-4 py-2">{meter.may_25}</td>
-                    <td className="px-4 py-2 font-semibold">{total}</td>
-                    <td className="px-4 py-2">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        status === 'Normal' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {status}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
+                return currentMeters.map((meter: WaterMeter) => {
+                  const total = meter.jan_25 + meter.feb_25 + meter.mar_25 + meter.apr_25 + meter.may_25 + meter.jun_25 + meter.jul_25
+                  const status = total > 10 ? 'Normal' : 'No Usage'
+                  
+                  return (
+                    <tr key={meter.id} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
+                      <td className="px-4 py-2 font-medium">{meter.meter_label}</td>
+                      <td className="px-4 py-2">{meter.account_number}</td>
+                      <td className="px-4 py-2">{meter.type}</td>
+                      <td className="px-4 py-2">{meter.jan_25}</td>
+                      <td className="px-4 py-2">{meter.feb_25}</td>
+                      <td className="px-4 py-2">{meter.mar_25}</td>
+                      <td className="px-4 py-2">{meter.apr_25}</td>
+                      <td className="px-4 py-2">{meter.may_25}</td>
+                      <td className="px-4 py-2">{meter.jun_25}</td>
+                      <td className="px-4 py-2">{meter.jul_25}</td>
+                      <td className="px-4 py-2 font-semibold">{total}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          status === 'Normal' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              })()}
             </tbody>
           </table>
         </div>
-        <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-          <p>Showing 1 to {Math.min(10, zoneData.individualMeters?.length || 0)} of {zoneData.individualMeters?.length || 0} meters</p>
-          <div>
-            <button className="px-3 py-1 border rounded-md hover:bg-gray-100 transition-colors">Previous</button>
-            <button className="px-3 py-1 border rounded-md hover:bg-gray-100 ml-2 transition-colors">Next</button>
-          </div>
-        </div>
+        
+        {/* Pagination Controls */}
+        {(() => {
+          const individualMeters = zoneData.individualMeters || []
+          const totalPages = Math.ceil(individualMeters.length / itemsPerPage)
+          const startIndex = (currentPage - 1) * itemsPerPage
+          const endIndex = Math.min(startIndex + itemsPerPage, individualMeters.length)
+          
+          return (
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-4">
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-500">
+                  Showing {individualMeters.length > 0 ? startIndex + 1 : 0} to {endIndex} of {individualMeters.length} individual meters
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Show:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1) // Reset to first page when changing items per page
+                    }}
+                    className="px-2 py-1 border rounded-md text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    {individualMeters.length > 50 && <option value={individualMeters.length}>All ({individualMeters.length})</option>}
+                  </select>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {totalPages <= 5 ? (
+                    // Show all pages if 5 or less
+                    Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded-md transition-colors ${
+                          currentPage === page 
+                            ? 'bg-blue-500 text-white' 
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))
+                  ) : (
+                    // Show abbreviated page numbers for many pages
+                    <>
+                      {currentPage > 2 && (
+                        <>
+                          <button
+                            onClick={() => setCurrentPage(1)}
+                            className="px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          >
+                            1
+                          </button>
+                          {currentPage > 3 && <span className="px-2">...</span>}
+                        </>
+                      )}
+                      
+                      {Array.from({ length: 3 }, (_, i) => {
+                        const page = currentPage - 1 + i
+                        if (page > 0 && page <= totalPages) {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-3 py-1 rounded-md transition-colors ${
+                                currentPage === page 
+                                  ? 'bg-blue-500 text-white' 
+                                  : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        }
+                        return null
+                      }).filter(Boolean)}
+                      
+                      {currentPage < totalPages - 1 && (
+                        <>
+                          {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="px-3 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          >
+                            {totalPages}
+                          </button>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+                
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )
+        })()}
       </Card>
     </div>
   )
