@@ -5,9 +5,18 @@ import {
   ModernLineChart, 
   ChartConfig 
 } from './ui/ModernChart';
+import { ModernDateRangeSlider } from './ui/Slider';
 import { TrendingUp, Download, Database, LayoutGrid, Tag, RefreshCw, Calendar, ChevronDown, Search, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+// Month mapping for electricity data
+const monthColumns = ['may_24', 'jun_24', 'jul_24'];
+const monthLabels = ['May-24', 'Jun-24', 'Jul-24'];
+const monthMapping = [
+  { label: 'May-24', value: 0, column: 'may_24' },
+  { label: 'Jun-24', value: 1, column: 'jun_24' },
+  { label: 'Jul-24', value: 2, column: 'jul_24' }
+];
 
 // Card Component
 const Card = ({ children, className = '' }) => {
@@ -25,14 +34,11 @@ const Card = ({ children, className = '' }) => {
 };
 
 // Calculation Functions
-const calculateTotalConsumption = (meters: any[], startMonth: string, endMonth: string) => {
-    const monthColumns = ['apr_24', 'may_24', 'jun_24', 'jul_24', 'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24', 'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25'];
-    const startIndex = monthColumns.indexOf(startMonth);
-    const endIndex = monthColumns.indexOf(endMonth);
+const calculateTotalConsumption = (meters: any[], startMonth: number, endMonth: number) => {
+    if (!meters || meters.length === 0) return 0;
     
-    if (startIndex === -1 || endIndex === -1) return 0;
-    
-    const selectedColumns = monthColumns.slice(startIndex, endIndex + 1);
+    // Get the selected month columns based on indices
+    const selectedColumns = monthColumns.slice(startMonth, endMonth + 1);
     
     return meters.reduce((total, meter) => {
         const meterTotal = selectedColumns.reduce((sum, col) => sum + (meter[col] || 0), 0);
@@ -44,14 +50,10 @@ const calculateCost = (consumption: number) => {
     return consumption * 0.025;
 };
 
-const getTopConsumer = (meters: any[], startMonth: string, endMonth: string) => {
-    const monthColumns = ['apr_24', 'may_24', 'jun_24', 'jul_24', 'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24', 'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25'];
-    const startIndex = monthColumns.indexOf(startMonth);
-    const endIndex = monthColumns.indexOf(endMonth);
+const getTopConsumer = (meters: any[], startMonth: number, endMonth: number) => {
+    if (!meters || meters.length === 0) return null;
     
-    if (startIndex === -1 || endIndex === -1) return null;
-    
-    const selectedColumns = monthColumns.slice(startIndex, endIndex + 1);
+    const selectedColumns = monthColumns.slice(startMonth, endMonth + 1);
     
     let topMeter = null;
     let maxConsumption = 0;
@@ -79,6 +81,7 @@ const formatMWh = (kWh: number) => {
 const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     const [selectedType, setSelectedType] = useState('');
     const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+    const [isAnimating, setIsAnimating] = useState(false);
     
     useEffect(() => {
         if (meters && meters.length > 0) {
@@ -97,11 +100,8 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     const topConsumer = getTopConsumer(filteredMeters, dateRange.start, dateRange.end);
     
     // Generate monthly trend data
-    const monthColumns = ['apr_24', 'may_24', 'jun_24', 'jul_24', 'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24', 'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25'];
-    const monthLabels = ['Apr-24', 'May-24', 'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25'];
-    
     const trendData = monthColumns.map((col, idx) => ({
-        name: monthLabels[idx],
+        month: monthLabels[idx],
         consumption: filteredMeters.reduce((sum: number, meter: any) => sum + (meter[col] || 0), 0)
     }));
     
@@ -112,11 +112,20 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
         totalCost: calculateCost(calculateTotalConsumption([meter], dateRange.start, dateRange.end))
     }));
     
+    // Handle range slider change
+    const handleRangeChange = (startMonth: number, endMonth: number) => {
+        setIsAnimating(true);
+        setTimeout(() => {
+            onDateRangeChange({ start: startMonth, end: endMonth });
+            setIsAnimating(false);
+        }, 300);
+    };
+    
     return (
         <div className="space-y-6">
             {/* Filter Buttons */}
             <Card>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2">
                     <span className="text-sm font-medium text-gray-500 self-center mr-2">Filter by Type:</span>
                     {availableTypes.map(type => (
                         <button
@@ -132,41 +141,19 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
                         </button>
                     ))}
                 </div>
-                
-                {/* Date Range Controls */}
-                <div className="flex items-center gap-4">
-                    <select 
-                        value={dateRange.start} 
-                        onChange={(e) => onDateRangeChange({...dateRange, start: e.target.value})}
-                        className="p-2 border rounded-md dark:bg-white/10"
-                    >
-                        {monthColumns.map((col, idx) => (
-                            <option key={col} value={col}>{monthLabels[idx]}</option>
-                        ))}
-                    </select>
-                    <span>to</span>
-                    <select 
-                        value={dateRange.end} 
-                        onChange={(e) => onDateRangeChange({...dateRange, end: e.target.value})}
-                        className="p-2 border rounded-md dark:bg-white/10"
-                    >
-                        {monthColumns.map((col, idx) => (
-                            <option key={col} value={col}>{monthLabels[idx]}</option>
-                        ))}
-                    </select>
-                    <button 
-                        onClick={() => onDateRangeChange({start: 'apr_24', end: 'jul_25'})}
-                        className="text-gray-500 hover:text-gray-800 flex items-center gap-1"
-                    >
-                        <RefreshCw className="w-4 h-4" /> Reset Range
-                    </button>
-                </div>
             </Card>
             
+            {/* Modern Range Slider */}
+            <ModernDateRangeSlider 
+                onRangeChange={handleRangeChange}
+                defaultStart={dateRange.start}
+                defaultEnd={dateRange.end}
+            />
+            
             {/* Analysis Title */}
-            <Card>
+            <Card className={`transition-all duration-500 ${isAnimating ? 'opacity-70' : 'opacity-100'}`}>
                 <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white">
-                    Analysis for {selectedType} from {dateRange.start} to {dateRange.end}
+                    Analysis for {selectedType} from {monthLabels[dateRange.start]} to {monthLabels[dateRange.end]}
                 </h3>
             </Card>
             
@@ -226,19 +213,21 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
             </div>
             
             {/* Chart */}
-            <ModernAreaChart
-                data={trendData}
-                config={{
-                    consumption: {
-                        label: 'Consumption (kWh)',
-                        color: '#10B981'
-                    }
-                }}
-                title={`Monthly Trend for ${selectedType}`}
-                height="h-[300px]"
-                showLegend={false}
-                curved={true}
-            />
+            <div className={`transition-all duration-500 ${isAnimating ? 'opacity-70 scale-95' : 'opacity-100 scale-100'}`}>
+                <ModernAreaChart
+                    data={trendData}
+                    config={{
+                        consumption: {
+                            label: 'Consumption (kWh)',
+                            color: '#10B981'
+                        }
+                    }}
+                    title={`Monthly Trend for ${selectedType}`}
+                    height="h-[300px]"
+                    showLegend={false}
+                    curved={true}
+                />
+            </div>
             
             {/* Table */}
             <Card>
@@ -276,17 +265,16 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
 
 // Tab 2: Overview Component
 const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
+    const [isAnimating, setIsAnimating] = useState(false);
+    
     const totalConsumption = calculateTotalConsumption(meters || [], dateRange.start, dateRange.end);
     const totalCost = calculateCost(totalConsumption);
     const totalMeters = meters?.length || 0;
     const topConsumer = getTopConsumer(meters || [], dateRange.start, dateRange.end);
     
     // Generate monthly trend data
-    const monthColumns = ['apr_24', 'may_24', 'jun_24', 'jul_24', 'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24', 'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25'];
-    const monthLabels = ['Apr-24', 'May-24', 'Jun-24', 'Jul-24', 'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24', 'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25'];
-    
     const monthlyTrendData = monthColumns.map((col, idx) => ({
-        name: monthLabels[idx],
+        month: monthLabels[idx],
         consumption: (meters || []).reduce((sum: number, meter: any) => sum + (meter[col] || 0), 0)
     }));
     
@@ -307,43 +295,28 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
         }))
         .sort((a, b) => b.value - a.value);
     
+    // Handle range slider change
+    const handleRangeChange = (startMonth: number, endMonth: number) => {
+        setIsAnimating(true);
+        setTimeout(() => {
+            onDateRangeChange({ start: startMonth, end: endMonth });
+            setIsAnimating(false);
+        }, 300);
+    };
+    
     return (
         <div className="space-y-6">
-            {/* Date Range Controls */}
-            <Card>
-                <div className="flex items-center gap-4">
-                    <select 
-                        value={dateRange.start} 
-                        onChange={(e) => onDateRangeChange({...dateRange, start: e.target.value})}
-                        className="p-2 border rounded-md dark:bg-white/10"
-                    >
-                        {monthColumns.map((col, idx) => (
-                            <option key={col} value={col}>{monthLabels[idx]}</option>
-                        ))}
-                    </select>
-                    <span>to</span>
-                    <select 
-                        value={dateRange.end} 
-                        onChange={(e) => onDateRangeChange({...dateRange, end: e.target.value})}
-                        className="p-2 border rounded-md dark:bg-white/10"
-                    >
-                        {monthColumns.map((col, idx) => (
-                            <option key={col} value={col}>{monthLabels[idx]}</option>
-                        ))}
-                    </select>
-                    <button 
-                        onClick={() => onDateRangeChange({start: 'apr_24', end: 'jul_25'})}
-                        className="text-gray-500 hover:text-gray-800 flex items-center gap-1"
-                    >
-                        <RefreshCw className="w-4 h-4" /> Reset Range
-                    </button>
-                </div>
-            </Card>
+            {/* Modern Range Slider */}
+            <ModernDateRangeSlider 
+                onRangeChange={handleRangeChange}
+                defaultStart={dateRange.start}
+                defaultEnd={dateRange.end}
+            />
             
             {/* Title */}
-            <Card>
+            <Card className={`transition-all duration-500 ${isAnimating ? 'opacity-70' : 'opacity-100'}`}>
                 <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white">
-                    Consumption Overview for {dateRange.start} to {dateRange.end}
+                    Consumption Overview for {monthLabels[dateRange.start]} to {monthLabels[dateRange.end]}
                 </h3>
             </Card>
             
@@ -403,7 +376,7 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
             </div>
             
             {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all duration-500 ${isAnimating ? 'opacity-70 scale-95' : 'opacity-100 scale-100'}`}>
                 <ModernAreaChart
                     data={monthlyTrendData}
                     config={{
@@ -584,8 +557,8 @@ export const EnhancedElectricityModule = () => {
     const [meters, setMeters] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({
-        start: 'apr_24',
-        end: 'jul_25'
+        start: 0, // May-24
+        end: 2   // Jul-24
     });
     
     const tabs = [
