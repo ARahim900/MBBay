@@ -9,15 +9,22 @@ import { CompactRangeSlider } from './ui/Slider';
 import { TrendingUp, Download, Database, LayoutGrid, Tag, RefreshCw, Calendar, ChevronDown, Search, Filter } from 'lucide-react';
 import { MenuBar } from './ui/glow-menu';
 import { supabase } from '../lib/supabase';
+import { theme } from '../lib/theme';
 
-// Month mapping for electricity data
-const monthColumns = ['may_24', 'jun_24', 'jul_24'];
-const monthLabels = ['May-24', 'Jun-24', 'Jul-24'];
-const monthMapping = [
-  { label: 'May-24', value: 0, column: 'may_24' },
-  { label: 'Jun-24', value: 1, column: 'jun_24' },
-  { label: 'Jul-24', value: 2, column: 'jul_24' }
+// Month mapping for electricity data - updated to match database schema
+const monthColumns = [
+  'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25',
+  'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24'
 ];
+const monthLabels = [
+  'Jan-25', 'Feb-25', 'Mar-25', 'Apr-25', 'May-25', 'Jun-25', 'Jul-25',
+  'Aug-24', 'Sep-24', 'Oct-24', 'Nov-24', 'Dec-24'
+];
+const monthMapping = monthLabels.map((label, index) => ({
+  label,
+  value: index,
+  column: monthColumns[index]
+}));
 
 // Card Component
 const Card = ({ children, className = '' }) => {
@@ -223,13 +230,14 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
                     config={{
                         consumption: {
                             label: 'Consumption (kWh)',
-                            color: '#10B981'
+                            color: theme.colors.primary
                         }
                     }}
                     title={`Monthly Trend for ${selectedType}`}
                     height="h-[300px]"
                     showLegend={false}
                     curved={true}
+                    stacked={false}
                 />
             </div>
             
@@ -295,7 +303,7 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     
     const consumptionByTypeData = Object.entries(typeData)
         .map(([type, consumption]: [string, any]) => ({
-            name: type,
+            month: type,
             value: consumption
         }))
         .sort((a, b) => b.value - a.value);
@@ -389,13 +397,14 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
                     config={{
                         consumption: {
                             label: 'Consumption (kWh)',
-                            color: '#8b5cf6'
+                            color: theme.colors.primary
                         }
                     }}
                     title="Monthly Consumption Trend"
                     height="h-[300px]"
                     showLegend={false}
                     curved={true}
+                    stacked={false}
                 />
                 
                 <ModernBarChart
@@ -403,13 +412,13 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
                     config={{
                         value: {
                             label: 'Consumption (kWh)',
-                            color: '#10B981'
+                            color: theme.colors.secondary
                         }
                     }}
                     title="Consumption by Type"
                     height="h-[300px]"
                     showLegend={false}
-                    horizontal={true}
+                    horizontal={false}
                 />
             </div>
         </div>
@@ -422,10 +431,13 @@ const DatabaseTab = ({ meters }: any) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     
-    // Calculate totals for each meter
+    // Calculate totals for each meter using all available month columns
     const processedMeters = (meters || []).map((meter: any) => {
-        const monthColumns = ['apr_24', 'may_24', 'jun_24', 'jul_24', 'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24', 'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25'];
-        const totalConsumption = monthColumns.reduce((sum, col) => sum + (meter[col] || 0), 0);
+        const allMonthColumns = [
+            'jan_25', 'feb_25', 'mar_25', 'apr_25', 'may_25', 'jun_25', 'jul_25',
+            'aug_24', 'sep_24', 'oct_24', 'nov_24', 'dec_24'
+        ];
+        const totalConsumption = allMonthColumns.reduce((sum, col) => sum + (meter[col] || 0), 0);
         const totalCost = calculateCost(totalConsumption);
         
         return {
@@ -564,8 +576,8 @@ export const EnhancedElectricityModule = () => {
     const [meters, setMeters] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({
-        start: 0, // May-24
-        end: 2   // Jul-24
+        start: 0, // Jan-25
+        end: 6   // Jul-25
     });
     
     const menuItems = [
@@ -596,17 +608,38 @@ export const EnhancedElectricityModule = () => {
         fetchMeters();
     }, []);
     
+    const [error, setError] = useState<string | null>(null);
+    
     const fetchMeters = async () => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
-                .from('energy_meters')
+            setError(null);
+            
+            // First try electricity_meters table, then fall back to energy_meters
+            let { data, error } = await supabase
+                .from('electricity_meters')
                 .select('*');
             
-            if (error) throw error;
+            if (error) {
+                // Fallback to energy_meters table
+                const fallback = await supabase
+                    .from('energy_meters')
+                    .select('*');
+                    
+                if (fallback.error) {
+                    throw new Error(`Database error: ${fallback.error.message}`);
+                }
+                data = fallback.data;
+            }
+            
             setMeters(data || []);
-        } catch (error) {
-            console.error('Error fetching meters:', error);
+            
+            if (!data || data.length === 0) {
+                setError('No electricity meter data found in the database.');
+            }
+        } catch (error: any) {
+            console.error('Error fetching electricity meters:', error);
+            setError(error.message || 'Failed to load electricity data. Please check your connection.');
         } finally {
             setLoading(false);
         }
@@ -616,9 +649,30 @@ export const EnhancedElectricityModule = () => {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
-                    <p className="mt-4 text-gray-600">Loading electricity data...</p>
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-300">Loading electricity data...</p>
                 </div>
+            </div>
+        );
+    }
+    
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <Card className="text-center max-w-md">
+                    <div className="text-red-500 mb-4">
+                        <Database className="w-16 h-16 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Database Connection Error</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+                        <button 
+                            onClick={fetchMeters}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all"
+                        >
+                            <RefreshCw className="w-4 h-4 inline mr-2" />
+                            Retry Connection
+                        </button>
+                    </div>
+                </Card>
             </div>
         );
     }
@@ -639,7 +693,22 @@ export const EnhancedElectricityModule = () => {
     return (
         <div>
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Electricity System Analysis</h2>
+                <div>
+                    <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Electricity System Analysis</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {meters.length > 0 ? `${meters.length} meters loaded` : 'Muscat Bay Energy Management'}
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={fetchMeters}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh Data
+                    </button>
+                </div>
             </div>
             
             {/* Tab Navigation */}

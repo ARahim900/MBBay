@@ -213,7 +213,7 @@ export const Slider: React.FC<SliderProps> = ({
             className="absolute px-2 py-1 bg-gray-900 text-white text-sm rounded transform -translate-x-1/2 -translate-y-full -mt-2 pointer-events-none z-20"
             style={{ left: `${minPercent}%` }}
           >
-            {values[0]}
+            {marks.length > 0 && marks[values[0]] ? marks[values[0]].label : values[0]}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
           </div>
         )}
@@ -223,7 +223,7 @@ export const Slider: React.FC<SliderProps> = ({
             className="absolute px-2 py-1 bg-gray-900 text-white text-sm rounded transform -translate-x-1/2 -translate-y-full -mt-2 pointer-events-none z-20"
             style={{ left: `${maxPercent}%` }}
           >
-            {values[1]}
+            {marks.length > 0 && marks[values[1]] ? marks[values[1]].label : values[1]}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
           </div>
         )}
@@ -253,7 +253,12 @@ export const Slider: React.FC<SliderProps> = ({
       {/* Range Display */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-gray-600 dark:text-gray-400">
-          Range: <span className="font-semibold" style={{ color }}>{values[0]} - {values[1]}</span>
+          Range: <span className="font-semibold" style={{ color }}>
+            {marks.length > 0 && marks[values[0]] && marks[values[1]] 
+              ? `${marks[values[0]].label} - ${marks[values[1]].label}`
+              : `${values[0]} - ${values[1]}`
+            }
+          </span>
         </div>
         <button
           onClick={resetValues}
@@ -300,13 +305,21 @@ export const CompactRangeSlider: React.FC<CompactRangeSliderProps> = ({
   }, [onRangeChange]);
 
   return (
-    <div className={`bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200/60 dark:border-white/10 p-3 ${className}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-          {title}: {months[values[0]]?.label} to {months[values[1]]?.label}
-        </span>
+    <div className={`bg-white dark:bg-[#2C2834] rounded-xl border border-gray-200/80 dark:border-white/10 p-4 shadow-sm transition-all duration-300 ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {title}
+          </span>
+          <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+            {months[values[0]]?.label} to {months[values[1]]?.label}
+          </span>
+        </div>
         {isAnimating && (
-          <div className="w-2 h-2 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex items-center gap-2 text-xs text-orange-600">
+            <div className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            Updating...
+          </div>
         )}
       </div>
       
