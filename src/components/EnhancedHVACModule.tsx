@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit, AlertTriangle, ChevronUp, ChevronDown, X } from 'lucide-react';
+import { Search, Edit, AlertTriangle, ChevronUp, ChevronDown, X, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 // Edit Modal Component
@@ -13,6 +13,9 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
         status: 'Open - Action Required',
         latest_update_notes: ''
     });
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [saveSuccess, setSaveSuccess] = useState(false);
 
     useEffect(() => {
         if (issue) {
@@ -25,13 +28,37 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
                 status: issue.status || 'Open - Action Required',
                 latest_update_notes: issue.latest_update_notes || ''
             });
+            setSaveError(null);
+            setSaveSuccess(false);
+            setSaving(false);
         }
     }, [issue]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ ...issue, ...formData });
-        onClose();
+        setSaving(true);
+        setSaveError(null);
+        setSaveSuccess(false);
+        
+        try {
+            const updatedData = { 
+                ...issue, 
+                ...formData,
+                updated_at: new Date().toISOString()
+            };
+            
+            await onSave(updatedData);
+            setSaveSuccess(true);
+            
+            // Close modal after short delay to show success message
+            setTimeout(() => {
+                onClose();
+            }, 1500);
+        } catch (error: any) {
+            setSaveError(error.message || 'Failed to save changes. Please try again.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (!isOpen) return null;
@@ -166,19 +193,45 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
                         />
                     </div>
 
+                    {/* Success/Error Messages */}
+                    {saveError && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4" />
+                                {saveError}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {saveSuccess && (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Changes saved successfully! Closing modal...
+                            </div>
+                        </div>
+                    )}
+
                     <div className="flex justify-end gap-3 pt-4 border-t">
                         <button 
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-[#374151] border border-[#E5E7EB] rounded-md hover:bg-gray-50"
+                            disabled={saving}
+                            className="px-4 py-2 text-[#374151] border border-[#E5E7EB] rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancel
                         </button>
                         <button 
                             type="submit"
-                            className="px-4 py-2 bg-[#10B981] text-white rounded-md hover:bg-green-600"
+                            disabled={saving}
+                            className="px-4 py-2 bg-[#10B981] text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                            Save Changes
+                            {saving && (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            )}
+                            {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
                 </form>
@@ -212,15 +265,23 @@ export const EnhancedHVACModule = () => {
     const fetchIssues = async () => {
         try {
             setLoading(true);
+            console.log('Fetching HVAC issues from database...');
+            
             const { data, error } = await supabase
                 .from('hvac_tracker')
                 .select('*')
-                .order('created_at', { ascending: false });
+                .order('updated_at', { ascending: false });
             
-            if (error) throw error;
+            if (error) {
+                console.error('Database fetch error:', error);
+                throw new Error(`Failed to fetch HVAC issues: ${error.message}`);
+            }
+            
+            console.log(`Successfully fetched ${data?.length || 0} HVAC issues`);
             setIssues(data || []);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching HVAC issues:', error);
+            // You could add a toast notification here or set an error state
         } finally {
             setLoading(false);
         }
@@ -270,20 +331,42 @@ export const EnhancedHVACModule = () => {
 
     const handleSave = async (updatedIssue: any) => {
         try {
-            const { error } = await supabase
+            // Prepare the data for update - remove any fields that shouldn't be updated
+            const { id, created_at, ...updateData } = updatedIssue;
+            
+            // Add timestamp for the update
+            updateData.updated_at = new Date().toISOString();
+            
+            console.log('Saving HVAC issue with ID:', id);
+            console.log('Update data:', updateData);
+            
+            const { data, error } = await supabase
                 .from('hvac_tracker')
-                .update(updatedIssue)
-                .eq('id', updatedIssue.id);
+                .update(updateData)
+                .eq('id', id)
+                .select(); // Return the updated data
             
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase update error:', error);
+                throw new Error(`Database update failed: ${error.message}`);
+            }
             
-            // Update local state
+            if (!data || data.length === 0) {
+                throw new Error('No record was updated. The issue may no longer exist.');
+            }
+            
+            console.log('Successfully updated issue:', data[0]);
+            
+            // Update local state with the returned data
             setIssues(issues.map(issue => 
-                issue.id === updatedIssue.id ? updatedIssue : issue
+                issue.id === id ? data[0] : issue
             ));
             
-        } catch (error) {
-            console.error('Error updating issue:', error);
+            return data[0]; // Return the updated record
+            
+        } catch (error: any) {
+            console.error('Error updating HVAC issue:', error);
+            throw error; // Re-throw to be handled by the modal
         }
     };
 
@@ -328,13 +411,28 @@ export const EnhancedHVACModule = () => {
         <div className="min-h-screen bg-[#F3F4F6] p-4">
             {/* Header */}
             <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                        </svg>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-[#1F2937]">HVAC System Maintenance Tracker</h1>
+                            <p className="text-sm text-[#6B7280]">
+                                {issues.length > 0 ? `${issues.length} maintenance issues tracked` : 'Real-time maintenance tracking'}
+                            </p>
+                        </div>
                     </div>
-                    <h1 className="text-2xl font-bold text-[#1F2937]">HVAC System Maintenance Tracker</h1>
+                    <button
+                        onClick={fetchIssues}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh Data
+                    </button>
                 </div>
             </div>
 
