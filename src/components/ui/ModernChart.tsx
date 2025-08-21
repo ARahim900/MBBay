@@ -17,6 +17,7 @@ import {
   Legend 
 } from 'recharts';
 import { Card } from './Card';
+import { theme } from '../../lib/theme';
 
 // Chart Configuration Type
 export interface ChartConfig {
@@ -74,15 +75,28 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
   const formatLabel = labelFormatter ? labelFormatter(label) : label;
 
   return (
-    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm p-4 rounded-xl shadow-2xl border border-gray-200 dark:border-slate-600">
+    <div 
+      className="backdrop-blur-sm p-4 rounded-xl shadow-2xl border"
+      style={{
+        backgroundColor: `${theme.colors.background}F2`,
+        borderColor: theme.colors.gridLines,
+        fontSize: theme.typography.tooltipSize
+      }}
+    >
       {formatLabel && (
-        <p className="font-semibold text-gray-800 dark:text-gray-200 mb-3 text-sm">
+        <p 
+          className="font-semibold mb-3"
+          style={{ 
+            color: theme.colors.textPrimary,
+            fontSize: theme.typography.labelSize 
+          }}
+        >
           {formatLabel}
         </p>
       )}
       <div className="space-y-2">
         {payload.map((entry, index) => (
-          <div key={index} className="flex items-center gap-3 text-sm">
+          <div key={index} className="flex items-center gap-3">
             {indicator === 'dot' && (
               <div 
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
@@ -95,10 +109,10 @@ export const ChartTooltipContent: React.FC<ChartTooltipContentProps> = ({
                 style={{ backgroundColor: entry.color }}
               />
             )}
-            <span className="text-gray-600 dark:text-gray-300 min-w-0">
+            <span className="min-w-0" style={{ color: theme.colors.textSecondary }}>
               {entry.name}
             </span>
-            <span className="font-medium text-gray-900 dark:text-white ml-auto">
+            <span className="font-medium ml-auto" style={{ color: theme.colors.textPrimary }}>
               {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
             </span>
           </div>
@@ -134,7 +148,10 @@ export const ChartLegendContent: React.FC<ChartLegendContentProps> = ({
             className="w-3 h-3 rounded-full" 
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-sm text-gray-600 dark:text-gray-300">
+          <span style={{ 
+            fontSize: theme.typography.labelSize,
+            color: theme.colors.textSecondary 
+          }}>
             {entry.value}
           </span>
         </div>
@@ -243,17 +260,21 @@ export const ModernAreaChart: React.FC<ModernAreaChartProps> = ({
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
+              tick={{ 
+                fill: theme.colors.textSecondary,
+                fontSize: theme.typography.labelSize,
+                fontFamily: theme.typography.fontFamily
+              }}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
+              tick={{ 
+                fill: theme.colors.textSecondary,
+                fontSize: theme.typography.labelSize,
+                fontFamily: theme.typography.fontFamily
+              }}
               tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
             />
             <ChartTooltip
@@ -270,8 +291,8 @@ export const ModernAreaChart: React.FC<ModernAreaChartProps> = ({
                 dataKey={key}
                 type={curved ? "natural" : "monotone"}
                 fill={`url(#fill${key})`}
-                stroke={config[key]?.color || `var(--color-${key})`}
-                strokeWidth={2}
+                stroke={config[key]?.color || theme.charts.colors[index % theme.charts.colors.length]}
+                strokeWidth={theme.charts.line.strokeWidth}
                 stackId={stacked ? "a" : undefined}
                 animationDuration={800}
                 animationBegin={index * 100}
@@ -324,12 +345,19 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
       {(title || description) && (
         <div className="border-b py-5 px-6">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-semibold" style={{ 
+              fontSize: theme.typography.titleSize,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}>
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="mt-1" style={{ 
+              fontSize: theme.typography.labelSize,
+              color: theme.colors.textSecondary 
+            }}>
               {description}
             </p>
           )}
@@ -342,7 +370,11 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
               data={data} 
               margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
             >
-              {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />}
+              {showGrid && <CartesianGrid 
+                strokeDasharray={theme.charts.grid.strokeDasharray} 
+                stroke={theme.colors.gridLines} 
+                opacity={theme.charts.grid.opacity} 
+              />}
               <XAxis
                 dataKey="month"
                 tickLine={false}
@@ -369,11 +401,21 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
                 <Bar
                   key={key}
                   dataKey={key}
-                  fill={config[key]?.color || '#8884d8'}
-                  radius={[4, 4, 0, 0]}
+                  fill={config[key]?.color || theme.charts.colors[index % theme.charts.colors.length]}
+                  radius={[theme.charts.bar.borderRadius, theme.charts.bar.borderRadius, 0, 0]}
                   animationDuration={600}
                   animationBegin={index * 100}
                   stackId={stacked ? "a" : undefined}
+                  onMouseEnter={(e: any) => {
+                    if (e && e.target) {
+                      e.target.style.opacity = theme.charts.bar.hoverOpacity;
+                    }
+                  }}
+                  onMouseLeave={(e: any) => {
+                    if (e && e.target) {
+                      e.target.style.opacity = 1;
+                    }
+                  }}
                 />
               ))}
               {showLegend && <Legend content={<ChartLegendContent />} />}
@@ -418,12 +460,19 @@ export const ModernLineChart: React.FC<ModernLineChartProps> = ({
       {(title || description) && (
         <div className="border-b py-5 px-6">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-semibold" style={{ 
+              fontSize: theme.typography.titleSize,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}>
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="mt-1" style={{ 
+              fontSize: theme.typography.labelSize,
+              color: theme.colors.textSecondary 
+            }}>
               {description}
             </p>
           )}
@@ -441,17 +490,21 @@ export const ModernLineChart: React.FC<ModernLineChartProps> = ({
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
+              tick={{ 
+                fill: theme.colors.textSecondary,
+                fontSize: theme.typography.labelSize,
+                fontFamily: theme.typography.fontFamily
+              }}
             />
             <YAxis
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
+              tick={{ 
+                fill: theme.colors.textSecondary,
+                fontSize: theme.typography.labelSize,
+                fontFamily: theme.typography.fontFamily
+              }}
               tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
             />
             <ChartTooltip
@@ -462,11 +515,21 @@ export const ModernLineChart: React.FC<ModernLineChartProps> = ({
               <Line
                 key={key}
                 dataKey={key}
-                stroke={config[key]?.color || `var(--color-${key})`}
-                strokeWidth={3}
+                stroke={config[key]?.color || theme.charts.colors[index % theme.charts.colors.length]}
+                strokeWidth={theme.charts.line.strokeWidth}
                 type={curved ? "natural" : "monotone"}
-                dot={showDots ? { r: 4, fill: `var(--color-${key})` } : false}
-                activeDot={{ r: 6, fill: `var(--color-${key})`, strokeWidth: 2, stroke: '#fff' }}
+                dot={showDots ? { 
+                  r: theme.charts.line.dotSize, 
+                  fill: config[key]?.color || theme.charts.colors[index % theme.charts.colors.length],
+                  strokeWidth: theme.charts.line.dotBorderWidth,
+                  stroke: theme.colors.background
+                } : false}
+                activeDot={{ 
+                  r: theme.charts.line.dotSize + 2, 
+                  fill: config[key]?.color || theme.charts.colors[index % theme.charts.colors.length], 
+                  strokeWidth: theme.charts.line.dotBorderWidth, 
+                  stroke: theme.colors.background 
+                }}
                 animationDuration={800}
                 animationBegin={index * 100}
               />
@@ -501,22 +564,32 @@ export const ModernDonutChart: React.FC<ModernDonutChartProps> = ({
   height = "h-[400px]",
   showLegend = true,
   innerRadius = 60,
-  outerRadius = 120
+  outerRadius = 100
 }) => {
   const dataKeys = Object.keys(config);
-  const colors = dataKeys.map(key => config[key].color);
+  const colors = dataKeys.map(key => config[key].color || theme.charts.colors[0]);
+  
+  // Calculate inner radius based on theme ratio for doughnut style
+  const calculatedInnerRadius = outerRadius * theme.charts.pie.innerRadiusRatio;
 
   return (
     <Card className={`pt-0 ${className}`}>
       {(title || description) && (
         <div className="border-b py-5 px-6">
           {title && (
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-semibold" style={{ 
+              fontSize: theme.typography.titleSize,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}>
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="mt-1" style={{ 
+              fontSize: theme.typography.labelSize,
+              color: theme.colors.textSecondary 
+            }}>
               {description}
             </p>
           )}
@@ -534,10 +607,11 @@ export const ModernDonutChart: React.FC<ModernDonutChartProps> = ({
               nameKey="name"
               cx="50%"
               cy="50%"
-              innerRadius={innerRadius}
+              innerRadius={calculatedInnerRadius}
               outerRadius={outerRadius}
               paddingAngle={2}
               animationDuration={800}
+              strokeWidth={theme.charts.pie.strokeWidth}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />

@@ -7,6 +7,7 @@ import {
 } from './ui/ModernChart';
 import { CompactRangeSlider } from './ui/Slider';
 import { TrendingUp, Download, Database, LayoutGrid, Tag, RefreshCw, Calendar, ChevronDown, Search, Filter } from 'lucide-react';
+import { MenuBar } from './ui/glow-menu';
 import { supabase } from '../lib/supabase';
 
 // Month mapping for electricity data
@@ -567,10 +568,28 @@ export const EnhancedElectricityModule = () => {
         end: 2   // Jul-24
     });
     
-    const tabs = [
-        { name: 'Overview', icon: LayoutGrid },
-        { name: 'Analysis by Type', icon: Tag },
-        { name: 'Database', icon: Database },
+    const menuItems = [
+        { 
+            icon: LayoutGrid, 
+            label: 'Overview', 
+            href: '#',
+            gradient: "radial-gradient(circle, rgba(45,156,219,0.15) 0%, rgba(45,156,219,0.06) 50%, rgba(45,156,219,0) 100%)",
+            iconColor: "text-blue-500"
+        },
+        { 
+            icon: Tag, 
+            label: 'Analysis by Type', 
+            href: '#',
+            gradient: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(249,115,22,0.06) 50%, rgba(249,115,22,0) 100%)",
+            iconColor: "text-orange-500"
+        },
+        { 
+            icon: Database, 
+            label: 'Database', 
+            href: '#',
+            gradient: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.06) 50%, rgba(139,92,246,0) 100%)",
+            iconColor: "text-purple-500"
+        },
     ];
     
     useEffect(() => {
@@ -625,21 +644,12 @@ export const EnhancedElectricityModule = () => {
             
             {/* Tab Navigation */}
             <div className="flex justify-center mb-6">
-                <div className="flex flex-wrap items-center justify-center p-1 rounded-xl bg-gray-100 dark:bg-white/10 gap-x-1">
-                    {tabs.map(({ name, icon: Icon }) => (
-                        <button 
-                            key={name} 
-                            onClick={() => setActiveTab(name)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                                activeTab === name 
-                                    ? 'bg-white dark:bg-white/20 text-[#4E4456] dark:text-white shadow-sm' 
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-white/5'
-                            }`}
-                        >
-                            <Icon className="h-5 w-5" /> {name}
-                        </button>
-                    ))}
-                </div>
+                <MenuBar
+                    items={menuItems}
+                    activeItem={activeTab}
+                    onItemClick={(label) => setActiveTab(label)}
+                    className="w-fit"
+                />
             </div>
             
             {/* Tab Content */}

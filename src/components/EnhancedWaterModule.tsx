@@ -4,6 +4,7 @@ import { OverviewTab } from './OverviewTab'
 import { ZoneAnalysisTab } from './ZoneAnalysisTab'
 import { ConsumptionByTypeTab } from './ConsumptionByTypeTab'
 import { MainDatabaseTab } from './MainDatabaseTab'
+import { MenuBar } from './ui/glow-menu'
 
 const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
   <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${className}`}>
@@ -14,11 +15,35 @@ const Card = ({ children, className = '' }: { children: React.ReactNode, classNa
 export const EnhancedWaterModule = () => {
   const [activeSubModule, setActiveSubModule] = useState('Overview')
   
-  const subNavItems = [
-    { name: 'Overview', icon: LayoutDashboard },
-    { name: 'Zone Analysis', icon: MapPin },
-    { name: 'Consumption by Type', icon: PieIcon },
-    { name: 'Main Database', icon: Database },
+  const menuItems = [
+    { 
+      icon: LayoutDashboard, 
+      label: 'Overview', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(45,156,219,0.15) 0%, rgba(45,156,219,0.06) 50%, rgba(45,156,219,0) 100%)",
+      iconColor: "text-blue-500"
+    },
+    { 
+      icon: MapPin, 
+      label: 'Zone Analysis', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.06) 50%, rgba(34,197,94,0) 100%)",
+      iconColor: "text-green-500"
+    },
+    { 
+      icon: PieIcon, 
+      label: 'Consumption by Type', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(247,198,4,0.15) 0%, rgba(247,198,4,0.06) 50%, rgba(247,198,4,0) 100%)",
+      iconColor: "text-yellow-500"
+    },
+    { 
+      icon: Database, 
+      label: 'Main Database', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.06) 50%, rgba(139,92,246,0) 100%)",
+      iconColor: "text-purple-500"
+    },
   ]
 
   const renderSubModule = () => {
@@ -43,23 +68,14 @@ export const EnhancedWaterModule = () => {
         <p className="text-sm text-gray-500">Muscat Bay Resource Management</p>
       </div>
       
-      <Card className="mb-6">
-        <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-2">
-          {subNavItems.map(({ name, icon: Icon }) => (
-            <button 
-              key={name} 
-              onClick={() => setActiveSubModule(name)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:bg-gray-100 dark:hover:bg-white/10 ${
-                activeSubModule === name 
-                  ? 'bg-gray-200 dark:bg-white/20 text-[#4E4456] dark:text-white shadow-inner' 
-                  : 'text-gray-600 dark:text-gray-300'
-              }`}
-            >
-              <Icon className="h-5 w-5" /> {name}
-            </button>
-          ))}
-        </div>
-      </Card>
+      <div className="mb-6 flex justify-center">
+        <MenuBar
+          items={menuItems}
+          activeItem={activeSubModule}
+          onItemClick={(label) => setActiveSubModule(label)}
+          className="w-fit"
+        />
+      </div>
       
       {renderSubModule()}
     </div>

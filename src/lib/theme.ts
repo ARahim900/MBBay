@@ -1,43 +1,24 @@
 // Unified Design System Theme Configuration
 export const theme = {
-  // Color Palette
+  // Color Palette - As specified in the requirement
   colors: {
-    // Primary Brand Colors
-    primary: {
-      50: '#f0f9ff',
-      100: '#e0f2fe',
-      200: '#bae6fd',
-      300: '#7dd3fc',
-      400: '#38bdf8',
-      500: '#0ea5e9', // Main primary
-      600: '#0284c7',
-      700: '#0369a1',
-      800: '#075985',
-      900: '#0c4a6e',
-    },
+    // Core chart colors
+    primary: '#2D9CDB',      // Primary data series, lines, active elements
+    secondary: '#FF5B5B',    // Secondary data series or comparisons
+    accent: '#F7C604',       // Highlights or tertiary data
+    background: '#FFFFFF',   // Component backgrounds
+    textPrimary: '#111827',  // Main titles and important figures
+    textSecondary: '#6B7280', // Labels, subtitles, secondary text
+    gridLines: '#F3F2F7',    // Chart grid lines and gauge tracks
     
-    // Secondary Colors
-    secondary: {
-      50: '#f0fdf4',
-      100: '#dcfce7',
-      200: '#bbf7d0',
-      300: '#86efac',
-      400: '#4ade80',
-      500: '#22c55e', // Main secondary
-      600: '#16a34a',
-      700: '#15803d',
-      800: '#166534',
-      900: '#14532d',
-    },
-    
-    // Accent Colors
-    accent: {
+    // Extended palette for additional data series
+    extended: {
       purple: '#8b5cf6',
       indigo: '#6366f1',
       teal: '#14b8a6',
       orange: '#f97316',
       pink: '#ec4899',
-      yellow: '#eab308',
+      green: '#22c55e',
     },
     
     // Status Colors
@@ -62,7 +43,7 @@ export const theme = {
       900: '#111827',
     },
     
-    // Dark Mode Colors
+    // Dark Mode Colors (for future use)
     dark: {
       bg: '#0f172a',
       surface: '#1e293b',
@@ -73,12 +54,13 @@ export const theme = {
     }
   },
   
-  // Typography
+  // Typography - As specified in the requirement
   typography: {
-    fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      mono: ['JetBrains Mono', 'monospace'],
-    },
+    fontFamily: "'Inter', sans-serif",
+    titleSize: '1.25rem',     // 20px - for main titles
+    labelSize: '0.875rem',    // 14px - for labels and subtitles
+    tooltipSize: '0.75rem',   // 12px - for tooltips
+    // Extended sizes for flexibility
     fontSize: {
       xs: '0.75rem',
       sm: '0.875rem',
@@ -141,23 +123,46 @@ export const theme = {
     }
   },
   
-  // Chart Colors
+  // Chart-specific styling configuration
   charts: {
+    // Main chart colors array
     colors: [
-      '#0ea5e9', // Primary blue
-      '#22c55e', // Green
+      '#2D9CDB', // Primary
+      '#FF5B5B', // Secondary
+      '#F7C604', // Accent
       '#8b5cf6', // Purple
-      '#f97316', // Orange
-      '#ec4899', // Pink
       '#14b8a6', // Teal
-      '#eab308', // Yellow
+      '#f97316', // Orange
+      '#22c55e', // Green
       '#6366f1', // Indigo
     ],
+    // Line chart styling
+    line: {
+      strokeWidth: 3,        // Line thickness
+      dotSize: 6,           // Data point size
+      dotBorderWidth: 2,    // Data point border
+      curved: true,         // Use smooth curves (splines)
+    },
+    // Bar chart styling
+    bar: {
+      borderRadius: 4,      // Corner radius for top corners
+      hoverOpacity: 0.85,   // Opacity on hover
+    },
+    // Pie/Donut chart styling
+    pie: {
+      strokeWidth: 12,      // Stroke width for gauge
+      innerRadiusRatio: 0.6, // For doughnut style (60% of outer radius)
+    },
+    // Grid styling
+    grid: {
+      strokeDasharray: '3 3',
+      opacity: 0.1,
+    },
+    // Gradient configurations
     gradients: {
-      blue: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-      green: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-      purple: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-      orange: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+      primary: 'linear-gradient(180deg, #2D9CDB 0%, rgba(45, 156, 219, 0) 100%)',
+      secondary: 'linear-gradient(180deg, #FF5B5B 0%, rgba(255, 91, 91, 0) 100%)',
+      accent: 'linear-gradient(180deg, #F7C604 0%, rgba(247, 198, 4, 0) 100%)',
     }
   }
 };

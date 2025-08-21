@@ -199,6 +199,11 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  
+  /* Radial gradients for glow menu */
+  .bg-gradient-radial {
+    background-image: radial-gradient(var(--tw-gradient-stops));
+  }
 }
 
 /* Print styles */

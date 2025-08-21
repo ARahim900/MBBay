@@ -9,6 +9,7 @@ import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
+import { theme } from './src/lib/theme';
 
 
 // -- STATE MANAGEMENT (ZUSTAND) --
@@ -152,9 +153,9 @@ const WaterOverview = () => {
                 <UIModernAreaChart 
                     data={overviewConsumptionData}
                     config={{
-                        'L1-Main Source': { label: 'L1 - Main Source', color: '#8884d8' },
-                        'L2-Zone Bulk Meters': { label: 'L2 - Zone Bulk Meters', color: '#82ca9d' },
-                        'L3-Building/Villa Meters': { label: 'L3 - Building/Villa Meters', color: '#ffc658' }
+                        'L1-Main Source': { label: 'L1 - Main Source', color: theme.colors.primary },
+                        'L2-Zone Bulk Meters': { label: 'L2 - Zone Bulk Meters', color: theme.colors.secondary },
+                        'L3-Building/Villa Meters': { label: 'L3 - Building/Villa Meters', color: theme.colors.accent }
                     }}
                     title="Monthly Consumption Trend"
                     height="h-[300px]"
@@ -164,8 +165,8 @@ const WaterOverview = () => {
                 <UIModernAreaChart 
                     data={overviewWaterLossData}
                     config={{
-                        'Stage 1 Loss': { label: 'Stage 1 Loss', color: '#F94144' },
-                        'Stage 2 Loss': { label: 'Stage 2 Loss', color: '#F3722C' }
+                        'Stage 1 Loss': { label: 'Stage 1 Loss', color: theme.colors.secondary },
+                        'Stage 2 Loss': { label: 'Stage 2 Loss', color: theme.colors.extended.orange }
                     }}
                     title="Monthly Water Loss Trend"
                     height="h-[300px]"
@@ -207,7 +208,7 @@ const ZoneAnalysis = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <ModernDonutChart
                         data={[{ name: 'Zone Bulk Meter', value: 100 }]}
-                        config={{ value: { label: 'Zone Bulk Meter', color: '#3B82F6' } }}
+                        config={{ value: { label: 'Zone Bulk Meter', color: theme.colors.primary } }}
                         title="3,203"
                         description="Zone Bulk Meter"
                         height="h-[200px]"
@@ -215,7 +216,7 @@ const ZoneAnalysis = () => {
                     />
                     <ModernDonutChart
                         data={[{ name: 'Individual Meters', value: 33 }]}
-                        config={{ value: { label: 'Individual Meters Total', color: '#10B981' } }}
+                        config={{ value: { label: 'Individual Meters Total', color: theme.colors.extended.green } }}
                         title="1,053"
                         description="Individual Meters Total"
                         height="h-[200px]"
@@ -223,7 +224,7 @@ const ZoneAnalysis = () => {
                     />
                     <ModernDonutChart
                         data={[{ name: 'Water Loss', value: 67 }]}
-                        config={{ value: { label: 'Water Loss Distribution', color: '#F94144' } }}
+                        config={{ value: { label: 'Water Loss Distribution', color: theme.colors.secondary } }}
                         title="2,150"
                         description="Water Loss Distribution"
                         height="h-[200px]"
@@ -235,9 +236,9 @@ const ZoneAnalysis = () => {
             <UIModernAreaChart
                 data={zoneConsumptionTrend}
                 config={{
-                    Individual: { label: 'Individual Total', color: '#10B981' },
-                    Loss: { label: 'Water Loss', color: '#F94144' },
-                    ZoneBulk: { label: 'Zone Bulk', color: '#3B82F6' }
+                    Individual: { label: 'Individual Total', color: theme.colors.extended.green },
+                    Loss: { label: 'Water Loss', color: theme.colors.secondary },
+                    ZoneBulk: { label: 'Zone Bulk', color: theme.colors.primary }
                 }}
                 title="Zone Consumption Trend"
                 height="h-[300px]"
@@ -344,7 +345,7 @@ const ConsumptionByType = () => {
              <UIModernAreaChart
                 data={consumptionByTypeBreakdown}
                 config={{
-                    consumption: { label: 'Consumption (m³)', color: '#10B981' }
+                    consumption: { label: 'Consumption (m³)', color: theme.colors.extended.green }
                 }}
                 title="Monthly Trend for Commercial"
                 height="h-[200px]"
@@ -376,7 +377,7 @@ const ConsumptionByType = () => {
                 <ModernBarChart
                     data={consumptionByTypeBreakdown}
                     config={{
-                        consumption: { label: 'Consumption (m³)', color: '#A2D0C8' }
+                        consumption: { label: 'Consumption (m³)', color: theme.colors.extended.teal }
                     }}
                     title="Monthly Consumption Breakdown"
                     height="h-[300px]"
@@ -385,7 +386,7 @@ const ConsumptionByType = () => {
                 <ModernDonutChart
                     data={[{name: 'Commercial', value: 100}]}
                     config={{
-                        value: { label: 'Commercial', color: '#10B981' }
+                        value: { label: 'Commercial', color: theme.colors.extended.green }
                     }}
                     title="Type Distribution"
                     height="h-[300px]"
@@ -474,10 +475,10 @@ const electricityConsumptionTrendData = [
 ];
 
 const electricityConsumptionByTypeData = [
-    { name: 'L1-Building', value: 1000, color: '#4285F4' }, // Google Blue
-    { name: 'Retail', value: 800, color: '#34A853' }, // Google Green
-    { name: 'Street Light', value: 400, color: '#FBBC05' }, // Google Yellow
-    { name: 'Others', value: 250, color: '#9CA3AF' }, // Gray
+    { name: 'L1-Building', value: 1000, color: theme.colors.primary },
+    { name: 'Retail', value: 800, color: theme.colors.extended.green },
+    { name: 'Street Light', value: 400, color: theme.colors.accent },
+    { name: 'Others', value: 250, color: theme.colors.gray[400] },
 ];
 
 const ElectricityModule = () => {
@@ -498,8 +499,8 @@ const firefightingKpis = [
     { title: "MAINTENANCE DUE", value: "1 systems", subValue: "Scheduled maintenance needed", icon: HardHat },
 ];
 const systemStatusData = [
-    { name: 'Operational', value: 5, color: '#22C55E' }, { name: 'Needs Attention', value: 1, color: '#F59E0B' },
-    { name: 'Critical', value: 1, color: '#EF4444' }, { name: 'Maintenance Due', value: 1, color: '#3B82F6' },
+    { name: 'Operational', value: 5, color: theme.colors.extended.green }, { name: 'Needs Attention', value: 1, color: theme.colors.accent },
+    { name: 'Critical', value: 1, color: theme.colors.secondary }, { name: 'Maintenance Due', value: 1, color: theme.colors.primary },
 ];
 const equipmentByTypeData = [
     { name: 'Control Panel', count: 2 }, { name: 'Smoke Detector', count: 1 }, { name: 'Extinguisher', count: 1 },
@@ -548,7 +549,7 @@ const FirefightingModule = () => {
                  <ModernDonutChart
                     data={systemStatusData}
                     config={{
-                        value: { label: 'Status Distribution', color: '#8884d8' }
+                        value: { label: 'Status Distribution', color: theme.colors.primary }
                     }}
                     title="System Status Distribution"
                     height="h-[250px]"
@@ -557,7 +558,7 @@ const FirefightingModule = () => {
                  <ModernBarChart
                     data={equipmentByTypeData}
                     config={{
-                        count: { label: 'Equipment Count', color: '#8884d8' }
+                        count: { label: 'Equipment Count', color: theme.colors.primary }
                     }}
                     title="Equipment by Type"
                     height="h-[250px]"
