@@ -183,35 +183,6 @@ const mockData = {
 const WaterOverview = () => {
   return (
     <div className="space-y-6">
-      {/* Date Range Controls */}
-      <Card>
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <input 
-                type="text" 
-                value="Jan-25" 
-                readOnly 
-                className="p-2 border rounded-md w-28 text-center bg-gray-50 dark:bg-slate-700 dark:border-slate-600" 
-              />
-              <span className="text-gray-500">to</span>
-              <input 
-                type="text" 
-                value="Jul-25" 
-                readOnly 
-                className="p-2 border rounded-md w-28 text-center bg-gray-50 dark:bg-slate-700 dark:border-slate-600" 
-              />
-            </div>
-            <Button variant="ghost" size="sm" icon={RefreshCw}>
-              Refresh
-            </Button>
-          </div>
-          <Button variant="primary" size="md">
-            AI Analysis
-          </Button>
-        </div>
-      </Card>
 
       {/* Main KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -232,13 +203,43 @@ const WaterOverview = () => {
 
       {/* Distribution Levels */}
       <Card>
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            4-Level Water Distribution
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Totals for Jan-25 to Jul-25
-          </p>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              4-Level Water Distribution
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Totals for Jan-25 to Jul-25
+            </p>
+          </div>
+          
+          {/* Compact Date Range Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <input 
+                type="text" 
+                value="Jan-25" 
+                readOnly 
+                className="p-1.5 border rounded-md w-20 text-xs text-center bg-gray-50 dark:bg-slate-700 dark:border-slate-600" 
+              />
+              <span className="text-xs text-gray-500">to</span>
+              <input 
+                type="text" 
+                value="Jul-25" 
+                readOnly 
+                className="p-1.5 border rounded-md w-20 text-xs text-center bg-gray-50 dark:bg-slate-700 dark:border-slate-600" 
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" icon={RefreshCw}>
+                Refresh
+              </Button>
+              <Button variant="primary" size="sm">
+                AI Analysis
+              </Button>
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {mockData.overview.distributionLevels.map((level, index) => (
