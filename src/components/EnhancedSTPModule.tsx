@@ -645,6 +645,7 @@ export const EnhancedSTPModule = () => {
                         );
                         
                         console.log('Chart validation:', { hasValidData, hasFinancialData, dataLength: monthlyData?.length });
+                        console.log('Monthly data for chart:', JSON.stringify(monthlyData?.slice(0, 3), null, 2));
                         
                         if (hasValidData && hasFinancialData) {
                             return (

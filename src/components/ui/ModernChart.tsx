@@ -270,7 +270,7 @@ export const ModernAreaChart: React.FC<ModernAreaChartProps> = ({
                 dataKey={key}
                 type={curved ? "natural" : "monotone"}
                 fill={`url(#fill${key})`}
-                stroke={`var(--color-${key})`}
+                stroke={config[key]?.color || `var(--color-${key})`}
                 strokeWidth={2}
                 stackId={stacked ? "a" : undefined}
                 animationDuration={800}
@@ -312,6 +312,12 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
   stacked = false
 }) => {
   const dataKeys = Object.keys(config);
+  
+  // Generate CSS variables for chart colors
+  const chartVars = Object.entries(config).reduce((vars, [key, value]) => ({
+    ...vars,
+    [`--color-${key}`]: value.color,
+  }), {});
 
   return (
     <Card className={`pt-0 ${className}`}>
@@ -330,48 +336,50 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
         </div>
       )}
       <div className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer
-          config={config}
-          className={`aspect-auto ${height} w-full`}
-        >
-          <BarChart data={data} layout={horizontal ? "horizontal" : "vertical"}>
-            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />}
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              fontSize={12}
-              tick={{ fill: 'currentColor' }}
-              className="text-gray-500 dark:text-gray-400"
-              tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
-            />
-            <ChartTooltip
-              cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            {dataKeys.map((key, index) => (
-              <Bar
-                key={key}
-                dataKey={key}
-                fill={`var(--color-${key})`}
-                radius={[4, 4, 0, 0]}
-                animationDuration={600}
-                animationBegin={index * 100}
-                stackId={stacked ? "a" : undefined}
+        <div className={`${height} w-full`} style={chartVars}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={data} 
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
+              {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />}
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                fontSize={12}
+                tick={{ fill: 'currentColor' }}
+                className="text-gray-500 dark:text-gray-400"
               />
-            ))}
-            {showLegend && <ChartLegend content={<ChartLegendContent />} />}
-          </BarChart>
-        </ChartContainer>
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                fontSize={12}
+                tick={{ fill: 'currentColor' }}
+                className="text-gray-500 dark:text-gray-400"
+                tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                content={<ChartTooltipContent indicator="line" />}
+              />
+              {dataKeys.map((key, index) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  fill={config[key]?.color || '#8884d8'}
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={600}
+                  animationBegin={index * 100}
+                  stackId={stacked ? "a" : undefined}
+                />
+              ))}
+              {showLegend && <Legend content={<ChartLegendContent />} />}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </Card>
   );
@@ -454,7 +462,7 @@ export const ModernLineChart: React.FC<ModernLineChartProps> = ({
               <Line
                 key={key}
                 dataKey={key}
-                stroke={`var(--color-${key})`}
+                stroke={config[key]?.color || `var(--color-${key})`}
                 strokeWidth={3}
                 type={curved ? "natural" : "monotone"}
                 dot={showDots ? { r: 4, fill: `var(--color-${key})` } : false}
