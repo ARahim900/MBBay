@@ -41,11 +41,17 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
         setSaveSuccess(false);
         
         try {
+            console.log('=== MODAL SUBMIT DEBUG ===');
+            console.log('Original issue from props:', issue);
+            console.log('Form data:', formData);
+            
             const updatedData = { 
                 ...issue, 
                 ...formData,
                 updated_at: new Date().toISOString()
             };
+            
+            console.log('Final updated data being sent:', updatedData);
             
             await onSave(updatedData);
             setSaveSuccess(true);
@@ -55,6 +61,7 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
                 onClose();
             }, 1500);
         } catch (error: any) {
+            console.error('Modal submit error:', error);
             setSaveError(error.message || 'Failed to save changes. Please try again.');
         } finally {
             setSaving(false);
@@ -267,6 +274,29 @@ export const EnhancedHVACModule = () => {
             setLoading(true);
             console.log('Fetching HVAC issues from database...');
             
+            // First, let's try to check if the table exists and what its structure is
+            const { data: tableCheck, error: tableError } = await supabase
+                .from('hvac_tracker')
+                .select('*')
+                .limit(1);
+                
+            if (tableError) {
+                console.error('Table access error:', tableError);
+                // Try alternative table names
+                const { data: altData, error: altError } = await supabase
+                    .from('hvac_maintenance_tracker')
+                    .select('*')
+                    .limit(1);
+                    
+                if (altError) {
+                    console.error('Alternative table error:', altError);
+                } else {
+                    console.log('Found alternative table: hvac_maintenance_tracker');
+                }
+            } else {
+                console.log('Table structure sample:', tableCheck);
+            }
+            
             const { data, error } = await supabase
                 .from('hvac_tracker')
                 .select('*')
@@ -278,6 +308,7 @@ export const EnhancedHVACModule = () => {
             }
             
             console.log(`Successfully fetched ${data?.length || 0} HVAC issues`);
+            console.log('Sample record structure:', data?.[0]);
             setIssues(data || []);
         } catch (error: any) {
             console.error('Error fetching HVAC issues:', error);
@@ -331,38 +362,89 @@ export const EnhancedHVACModule = () => {
 
     const handleSave = async (updatedIssue: any) => {
         try {
-            // Prepare the data for update - remove any fields that shouldn't be updated
-            const { id, created_at, ...updateData } = updatedIssue;
+            console.log('=== HVAC SAVE DEBUG START ===');
+            console.log('Original issue object:', updatedIssue);
+            console.log('Issue ID:', updatedIssue?.id);
+            console.log('Issue ID type:', typeof updatedIssue?.id);
             
-            // Add timestamp for the update
-            updateData.updated_at = new Date().toISOString();
+            // Check if we have a valid ID
+            if (!updatedIssue?.id) {
+                throw new Error('No ID found in the issue data. Cannot update record.');
+            }
             
-            console.log('Saving HVAC issue with ID:', id);
-            console.log('Update data:', updateData);
+            const id = updatedIssue.id;
             
-            const { data, error } = await supabase
+            // First, let's check if the record exists
+            const { data: existingRecord, error: fetchError } = await supabase
+                .from('hvac_tracker')
+                .select('*')
+                .eq('id', id)
+                .single();
+                
+            console.log('Existing record check:', existingRecord);
+            console.log('Fetch error:', fetchError);
+            
+            if (fetchError || !existingRecord) {
+                throw new Error(`Record with ID ${id} not found in database. ${fetchError?.message || ''}`);
+            }
+            
+            // Create a clean update object with only the fields we want to update
+            const updateData = {
+                building: updatedIssue.building,
+                main_system: updatedIssue.main_system,
+                equipment_asset_id: updatedIssue.equipment_asset_id,
+                finding_issue_description: updatedIssue.finding_issue_description,
+                priority: updatedIssue.priority,
+                status: updatedIssue.status,
+                latest_update_notes: updatedIssue.latest_update_notes,
+                updated_at: new Date().toISOString()
+            };
+            
+            console.log('Clean update data:', updateData);
+            
+            // Try the simplest possible update first - without .select()
+            const { error: updateError } = await supabase
                 .from('hvac_tracker')
                 .update(updateData)
+                .eq('id', id);
+            
+            console.log('Simple update error:', updateError);
+            
+            if (updateError) {
+                throw new Error(`Database update failed: ${updateError.message}`);
+            }
+            
+            console.log('Simple update succeeded, now fetching updated record...');
+            
+            // Fetch the updated record
+            const { data: updatedRecord, error: fetchUpdatedError } = await supabase
+                .from('hvac_tracker')
+                .select('*')
                 .eq('id', id)
-                .select(); // Return the updated data
+                .single();
+                
+            console.log('Fetched updated record:', updatedRecord);
+            console.log('Fetch updated error:', fetchUpdatedError);
             
-            if (error) {
-                console.error('Supabase update error:', error);
-                throw new Error(`Database update failed: ${error.message}`);
+            if (fetchUpdatedError || !updatedRecord) {
+                console.warn('Update succeeded but could not fetch updated record');
+                // Still update local state with our data
+                const mergedData = { ...existingRecord, ...updateData };
+                setIssues(issues.map(issue => 
+                    issue.id === id ? mergedData : issue
+                ));
+                return mergedData;
             }
             
-            if (!data || data.length === 0) {
-                throw new Error('No record was updated. The issue may no longer exist.');
-            }
+            console.log('Successfully updated and fetched issue:', updatedRecord);
+            console.log('=== HVAC SAVE DEBUG END ===');
             
-            console.log('Successfully updated issue:', data[0]);
-            
-            // Update local state with the returned data
+            // Update local state with the fetched data
             setIssues(issues.map(issue => 
-                issue.id === id ? data[0] : issue
+                issue.id === id ? updatedRecord : issue
             ));
             
-            return data[0]; // Return the updated record
+            return updatedRecord;
             
         } catch (error: any) {
             console.error('Error updating HVAC issue:', error);
@@ -425,14 +507,40 @@ export const EnhancedHVACModule = () => {
                             </p>
                         </div>
                     </div>
-                    <button
-                        onClick={fetchIssues}
-                        disabled={loading}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50"
-                    >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh Data
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={fetchIssues}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh Data
+                        </button>
+                        <button
+                            onClick={async () => {
+                                console.log('=== DATABASE TEST ===');
+                                try {
+                                    const { data, error } = await supabase
+                                        .from('hvac_tracker')
+                                        .select('*')
+                                        .limit(1);
+                                    console.log('Test query result:', { data, error });
+                                    if (data && data.length > 0) {
+                                        console.log('Sample record for debugging:', data[0]);
+                                        alert(`Database connected! Found ${issues.length} records. Check console for details.`);
+                                    } else {
+                                        alert('Database connected but no records found.');
+                                    }
+                                } catch (error) {
+                                    console.error('Database test failed:', error);
+                                    alert('Database test failed. Check console for details.');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
+                        >
+                            Test DB
+                        </button>
+                    </div>
                 </div>
             </div>
 
