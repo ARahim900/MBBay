@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Calendar, RefreshCw, Download, Droplets, Sprout, Truck, DollarSign, TrendingUp, BarChart3, Filter } from 'lucide-react';
 import { useSTPData } from '../../hooks/useSTPData';
+import { 
+  ModernAreaChart, 
+  ModernBarChart, 
+  ModernLineChart,
+  ChartConfig 
+} from './ui/ModernChart';
 
 // Enhanced CSS for slider styling
 const sliderStyles = `
@@ -599,97 +604,62 @@ export const EnhancedSTPModule = () => {
                 </div>
                 
                 {/* Monthly Water Volumes Chart */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                    <div className="flex items-center gap-4 mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Monthly Water Volumes (m³)</h3>
-                        <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-blue-500"></div>
-                                <span>Sewage Input</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-4 h-4 rounded-full bg-green-500"></div>
-                                <span>TSE Output</span>
-                            </div>
-                        </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={monthlyData}>
-                            <defs>
-                                <linearGradient id="sewageGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="tseGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                            <XAxis dataKey="month" stroke="#6B7280" fontSize={12} />
-                            <YAxis stroke="#6B7280" fontSize={12} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Area type="monotone" dataKey="sewageInput" stackId="1" stroke="#0EA5E9" fill="url(#sewageGradient)" name="Sewage Input" />
-                            <Area type="monotone" dataKey="tseOutput" stackId="1" stroke="#10B981" fill="url(#tseGradient)" name="TSE Output" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+                <ModernAreaChart
+                    data={monthlyData}
+                    config={{
+                        sewageInput: {
+                            label: "Sewage Input (m³)",
+                            color: "#0EA5E9"
+                        },
+                        tseOutput: {
+                            label: "TSE Output (m³)",
+                            color: "#10B981"
+                        }
+                    }}
+                    title="Monthly Water Volumes (m³)"
+                    description={`Water processing data from ${new Date(dateRange.start + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} to ${new Date(dateRange.end + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`}
+                    height="h-[350px]"
+                    stacked={false}
+                    showLegend={true}
+                    className="mb-6"
+                />
                 
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    {/* Monthly Financials Chart */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Monthly Financials (OMR)</h3>
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-sm bg-green-500"></div>
-                                    <span>Income</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-sm bg-cyan-500"></div>
-                                    <span>Savings</span>
-                                </div>
-                            </div>
-                        </div>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="month" stroke="#6B7280" fontSize={10} />
-                                <YAxis stroke="#6B7280" fontSize={10} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="income" fill="#84CC16" name="Income" radius={[2, 2, 0, 0]} />
-                                <Bar dataKey="savings" fill="#06B6D4" name="Savings" radius={[2, 2, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ModernBarChart
+                        data={monthlyData}
+                        config={{
+                            income: {
+                                label: "Income (OMR)",
+                                color: "#84CC16"
+                            },
+                            savings: {
+                                label: "Savings (OMR)",
+                                color: "#06B6D4"
+                            }
+                        }}
+                        title="Monthly Financials (OMR)"
+                        description="Income from tanker fees vs water cost savings"
+                        height="h-[300px]"
+                        showLegend={true}
+                        stacked={false}
+                    />
                     
-                    {/* Monthly Operations Chart */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Monthly Operations (Tanker Trips)</h3>
-                            <div className="flex items-center gap-2 text-sm">
-                                <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-                                <span>Tanker Trips</span>
-                            </div>
-                        </div>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <LineChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis dataKey="month" stroke="#6B7280" fontSize={10} />
-                                <YAxis stroke="#6B7280" fontSize={10} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="tankerTrips" 
-                                    stroke="#F97316" 
-                                    strokeWidth={3}
-                                    dot={{ r: 5, fill: '#F97316' }}
-                                    name="Tanker Trips"
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ModernLineChart
+                        data={monthlyData}
+                        config={{
+                            tankerTrips: {
+                                label: "Tanker Trips",
+                                color: "#F97316"
+                            }
+                        }}
+                        title="Monthly Operations"
+                        description="Number of tanker discharge trips per month"
+                        height="h-[300px]"
+                        showLegend={false}
+                        curved={true}
+                        showDots={true}
+                    />
                 </div>
                 
                 {/* Daily Operations Table */}

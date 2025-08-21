@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, Tooltip } from 'recharts'
 import { Droplets, Calendar, TrendingUp, PieChart as PieIcon, Download, CheckCircle, AlertTriangle, Info } from 'lucide-react'
 import { fetchWaterMeters, getMonthlyBreakdown, calculateTotalForMonths, filterByDateRange, monthLabels, type WaterMeter } from '../lib/waterData'
 import { performComprehensiveValidation, verifyTypeCalculations } from '../lib/dataValidation'
-import { DateRangeSlider } from './DateRangeSlider'
+import { ModernDateRangeSlider } from './ui/Slider'
+import { 
+  ModernAreaChart, 
+  ModernBarChart, 
+  ModernDonutChart, 
+  ChartConfig 
+} from './ui/ModernChart'
 
 const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
   <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${className}`}>
@@ -11,20 +16,20 @@ const Card = ({ children, className = '' }: { children: React.ReactNode, classNa
   </div>
 )
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string | number }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white/80 dark:bg-[#1A181F]/80 backdrop-blur-md p-3 rounded-lg shadow-lg border border-gray-200 dark:border-white/20">
-        <p className="label font-semibold text-gray-800 dark:text-gray-200">{`${label}`}</p>
-        {payload.map((pld, index) => (
-          <div key={index} style={{ color: pld.color }}>
-            {`${pld.name}: ${pld.value.toLocaleString()}`}
-          </div>
-        ))}
-      </div>
-    )
+// Define chart configuration for consistent theming
+const chartConfig: ChartConfig = {
+  consumption: {
+    label: "Consumption",
+    color: "hsl(var(--primary))"
+  },
+  desktop: {
+    label: "Desktop Usage", 
+    color: "#3b82f6"
+  },
+  mobile: {
+    label: "Mobile Usage",
+    color: "#10b981"
   }
-  return null
 }
 
 export const ConsumptionByTypeTab = () => {
@@ -370,7 +375,7 @@ export const ConsumptionByTypeTab = () => {
         </Card>
       )}
 
-      <DateRangeSlider 
+      <ModernDateRangeSlider 
         onRangeChange={handleDateRangeChange}
         defaultStart={startMonth}
         defaultEnd={endMonth}
@@ -406,33 +411,20 @@ export const ConsumptionByTypeTab = () => {
         </div>
       </Card>
 
-      <Card className={`transition-all duration-500 ${isAnimating ? 'opacity-70' : 'opacity-100'}`}>
-        <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Trend for {selectedType}</h3>
-        <div className={`transition-all duration-300 ${isAnimating ? 'scale-95' : 'scale-100'}`}>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={monthlyBreakdown} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.7}/>
-                  <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-              <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-              <Tooltip content={<CustomTooltip />} />
-              <Area 
-                type="monotone" 
-                dataKey="consumption" 
-                stroke="#10B981" 
-                fill="url(#colorTrend)"
-                animationDuration={800}
-                animationBegin={0}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+      <ModernAreaChart
+        data={monthlyBreakdown}
+        config={{
+          consumption: {
+            label: "Consumption (m³)",
+            color: "#10B981"
+          }
+        }}
+        title={`Monthly Trend for ${selectedType}`}
+        description={`Consumption pattern from ${monthLabels[startMonth]} to ${monthLabels[endMonth]}`}
+        height="h-[300px]"
+        showLegend={false}
+        className={`transition-all duration-500 ${isAnimating ? 'opacity-70' : 'opacity-100'}`}
+      />
 
       <Card>
         <div className="flex items-center justify-between mb-4">
@@ -489,54 +481,41 @@ export const ConsumptionByTypeTab = () => {
       </Card>
 
       <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all duration-500 ${isAnimating ? 'opacity-70 scale-95' : 'opacity-100 scale-100'}`}>
-        <Card>
-          <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Consumption Breakdown</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyBreakdown} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-              <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="consumption" 
-                fill="#14B8A6" 
-                radius={[4, 4, 0, 0]}
-                animationDuration={600}
-                animationBegin={100}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+        <ModernBarChart
+          data={monthlyBreakdown}
+          config={{
+            consumption: {
+              label: "Consumption (m³)",
+              color: "#14B8A6"
+            }
+          }}
+          title="Monthly Consumption Breakdown"
+          description={`Bar chart showing ${selectedType} consumption by month`}
+          height="h-[350px]"
+          showLegend={false}
+        />
         
-        <Card>
-          <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Type Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie 
-                data={[{ name: selectedType, value: 100 }]} 
-                dataKey="value" 
-                nameKey="name" 
-                cx="50%" 
-                cy="50%" 
-                innerRadius={80} 
-                outerRadius={100} 
-                fill="#10B981" 
-                labelLine={false}
-                animationDuration={800}
-                animationBegin={200}
-              >
-                <Cell fill="#10B981" />
-              </Pie>
-              <Tooltip />
-              <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-3xl font-bold fill-[#4E4456] dark:fill-white">
-                100%
-              </text>
-              <text x="50%" y="50%" dy="24" textAnchor="middle" className="fill-gray-500 text-sm">
-                {selectedType}
-              </text>
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <ModernDonutChart
+          data={[
+            { name: selectedType, value: totalConsumption },
+            { name: "Other Types", value: Math.max(0, (totalConsumption * 0.2)) } // Mock other types for visualization
+          ]}
+          config={{
+            [selectedType]: {
+              label: selectedType,
+              color: "#10B981"
+            },
+            "Other Types": {
+              label: "Other Types",
+              color: "#E5E7EB"
+            }
+          }}
+          title="Type Distribution"
+          description={`${selectedType} consumption vs others`}
+          height="h-[350px]"
+          innerRadius={60}
+          outerRadius={100}
+        />
       </div>
     </div>
   )

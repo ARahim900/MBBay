@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { create } from 'zustand';
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from 'recharts';
 import { Bell, Droplets, Flame, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle } from 'lucide-react';
 import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
 import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
@@ -32,7 +31,16 @@ const useAppStore = create<AppState>((set) => ({
 }));
 
 // Import the new UI components
-import { Card, KpiCard, Button, Sidebar, ModernAreaChart, DonutChart } from './src/components/ui';
+import { 
+  Card, 
+  KpiCard, 
+  Button, 
+  Sidebar,
+  ModernAreaChart as UIModernAreaChart,
+  ModernBarChart,
+  ModernDonutChart,
+  ChartConfig 
+} from './src/components/ui';
 
 // -- WATER MODULE MOCK DATA (DERIVED FROM SCREENSHOTS) --
 const overviewConsumptionData = [
@@ -78,66 +86,6 @@ const mainDatabaseMeters = [
     { label: 'ZONE 5 (Bulk Zone 5)', account: '4300345', zone: 'Zone_05', type: 'Zone Bulk', parent: 'Main Bulk (NAMA)', level: 'L2', jan: 4267, feb: 4231, mar: 3862, apr: 3737, may: 3849, jun: 4113, total: 24059 },
 ];
 
-// -- CHART COMPONENTS --
-const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string | number }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white/80 dark:bg-[#1A181F]/80 backdrop-blur-md p-3 rounded-lg shadow-lg border border-gray-200 dark:border-white/20">
-                <p className="label font-semibold text-gray-800 dark:text-gray-200">{`${label}`}</p>
-                {payload.map((pld, index) => (
-                    <div key={index} style={{ color: pld.color }}>
-                        {`${pld.name}: ${pld.value.toLocaleString()}`}
-                    </div>
-                ))}
-            </div>
-        );
-    }
-    return null;
-};
-
-const ModernAreaChart = ({ data, areas }) => (
-    <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-            <defs>
-                {areas.map(area => (
-                    <linearGradient key={area.dataKey} id={`color-${area.dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={area.color} stopOpacity={0.7}/>
-                        <stop offset="95%" stopColor={area.color} stopOpacity={0}/>
-                    </linearGradient>
-                ))}
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" />
-            <XAxis dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{fontSize: "14px"}}/>
-            {areas.map(area => (
-                <Area key={area.dataKey} type="monotone" dataKey={area.dataKey} stroke={area.color} strokeWidth={2} fill={`url(#color-${area.dataKey})`} name={area.name} />
-            ))}
-        </AreaChart>
-    </ResponsiveContainer>
-);
-
-const DonutChart = ({ value, color, title, subtitle }) => (
-    <div className="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105">
-        <div className="relative w-36 h-36">
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie data={[{ name: 'value', value }]} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="75%" outerRadius="100%" fill={color} startAngle={90} endAngle={90 + (value / 100) * 360} paddingAngle={0}>
-                         <Cell fill={color} />
-                    </Pie>
-                     <Pie data={[{ name: 'bg', value: 100 }]} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="75%" outerRadius="100%" fill={`${color}20`} startAngle={0} endAngle={360} />
-                </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-3xl font-bold text-[#4E4456] dark:text-white">{title}</span>
-            </div>
-        </div>
-        <div className="mt-3 text-center">
-            <h3 className="font-semibold text-lg text-[#4E4456] dark:text-white">{subtitle}</h3>
-        </div>
-    </div>
-);
 
 
 // -- WATER MODULE SUBSECTIONS --
@@ -201,21 +149,29 @@ const WaterOverview = () => {
                 </div>
             </Card>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Consumption Trend</h3>
-                    <ModernAreaChart data={overviewConsumptionData} areas={[
-                        { dataKey: 'L1-Main Source', name: 'L1 - Main Source', color: '#8884d8' },
-                        { dataKey: 'L2-Zone Bulk Meters', name: 'L2 - Zone Bulk Meters', color: '#82ca9d' },
-                        { dataKey: 'L3-Building/Villa Meters', name: 'L3 - Building/Villa Meters', color: '#ffc658' }
-                    ]} />
-                </Card>
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Water Loss Trend</h3>
-                    <ModernAreaChart data={overviewWaterLossData} areas={[
-                        { dataKey: 'Stage 1 Loss', name: 'Stage 1 Loss', color: '#F94144' },
-                        { dataKey: 'Stage 2 Loss', name: 'Stage 2 Loss', color: '#F3722C' },
-                    ]} />
-                </Card>
+                <UIModernAreaChart 
+                    data={overviewConsumptionData}
+                    config={{
+                        'L1-Main Source': { label: 'L1 - Main Source', color: '#8884d8' },
+                        'L2-Zone Bulk Meters': { label: 'L2 - Zone Bulk Meters', color: '#82ca9d' },
+                        'L3-Building/Villa Meters': { label: 'L3 - Building/Villa Meters', color: '#ffc658' }
+                    }}
+                    title="Monthly Consumption Trend"
+                    height="h-[300px]"
+                    showLegend={true}
+                    curved={true}
+                />
+                <UIModernAreaChart 
+                    data={overviewWaterLossData}
+                    config={{
+                        'Stage 1 Loss': { label: 'Stage 1 Loss', color: '#F94144' },
+                        'Stage 2 Loss': { label: 'Stage 2 Loss', color: '#F3722C' }
+                    }}
+                    title="Monthly Water Loss Trend"
+                    height="h-[300px]"
+                    showLegend={true}
+                    curved={true}
+                />
             </div>
         </div>
     );
@@ -249,28 +205,45 @@ const ZoneAnalysis = () => {
                 <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-2">Zone 08 Analysis for Apr-25</h3>
                 <p className="text-sm text-gray-500 mb-4">Zone bulk vs individual meters consumption analysis</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <DonutChart value={100} color="#3B82F6" title="3,203" subtitle="Zone Bulk Meter" />
-                    <DonutChart value={33} color="#10B981" title="1,053" subtitle="Individual Meters Total" />
-                    <DonutChart value={67} color="#F94144" title="2,150" subtitle="Water Loss Distribution" />
+                    <ModernDonutChart
+                        data={[{ name: 'Zone Bulk Meter', value: 100 }]}
+                        config={{ value: { label: 'Zone Bulk Meter', color: '#3B82F6' } }}
+                        title="3,203"
+                        description="Zone Bulk Meter"
+                        height="h-[200px]"
+                        showLegend={false}
+                    />
+                    <ModernDonutChart
+                        data={[{ name: 'Individual Meters', value: 33 }]}
+                        config={{ value: { label: 'Individual Meters Total', color: '#10B981' } }}
+                        title="1,053"
+                        description="Individual Meters Total"
+                        height="h-[200px]"
+                        showLegend={false}
+                    />
+                    <ModernDonutChart
+                        data={[{ name: 'Water Loss', value: 67 }]}
+                        config={{ value: { label: 'Water Loss Distribution', color: '#F94144' } }}
+                        title="2,150"
+                        description="Water Loss Distribution"
+                        height="h-[200px]"
+                        showLegend={false}
+                    />
                 </div>
             </Card>
 
-            <Card>
-                 <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Zone Consumption Trend</h3>
-                 <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={zoneConsumptionTrend} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                        <defs><linearGradient id="colorBulk" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#3B82F6" stopOpacity={0.7}/><stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/></linearGradient></defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-                        <XAxis dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false}/>
-                        <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false}/>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{fontSize: "14px"}}/>
-                        <Line type="monotone" dataKey="Individual" stroke="#10B981" strokeWidth={2} name="Individual Total" dot={false} />
-                        <Line type="monotone" dataKey="Loss" stroke="#F94144" strokeWidth={2} name="Water Loss" dot={false} />
-                        <Area type="monotone" dataKey="ZoneBulk" stroke="#3B82F6" fillOpacity={1} fill="url(#colorBulk)" name="Zone Bulk" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </Card>
+            <UIModernAreaChart
+                data={zoneConsumptionTrend}
+                config={{
+                    Individual: { label: 'Individual Total', color: '#10B981' },
+                    Loss: { label: 'Water Loss', color: '#F94144' },
+                    ZoneBulk: { label: 'Zone Bulk', color: '#3B82F6' }
+                }}
+                title="Zone Consumption Trend"
+                height="h-[300px]"
+                showLegend={true}
+                curved={true}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {kpis.map(kpi => (
@@ -368,19 +341,16 @@ const ConsumptionByType = () => {
                  </div>
             </Card>
 
-             <Card>
-                <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Trend for Commercial</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart data={consumptionByTypeBreakdown} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                        <defs><linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10B981" stopOpacity={0.7}/><stop offset="95%" stopColor="#10B981" stopOpacity={0}/></linearGradient></defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-                        <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="consumption" stroke="#10B981" fill="url(#colorTrend)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </Card>
+             <UIModernAreaChart
+                data={consumptionByTypeBreakdown}
+                config={{
+                    consumption: { label: 'Consumption (m³)', color: '#10B981' }
+                }}
+                title="Monthly Trend for Commercial"
+                height="h-[200px]"
+                showLegend={false}
+                curved={true}
+            />
 
              <Card>
                 <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Consumption by Type</h3>
@@ -403,31 +373,24 @@ const ConsumptionByType = () => {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Monthly Consumption Breakdown</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={consumptionByTypeBreakdown} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-                            <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => value >= 1000 ? `${value / 1000}k` : value} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="consumption" fill="#A2D0C8" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Card>
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Type Distribution</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                             <Pie data={[{name: 'Commercial', value: 100}]} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={80} outerRadius={100} fill="#10B981" labelLine={false}>
-                                 <Cell fill="#10B981" />
-                            </Pie>
-                            <Tooltip />
-                            <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-3xl font-bold fill-[#4E4456] dark:fill-white">100%</text>
-                            <text x="50%" y="50%" dy="24" textAnchor="middle" className="fill-gray-500 text-sm">Commercial</text>
-                        </PieChart>
-                    </ResponsiveContainer>
-                </Card>
+                <ModernBarChart
+                    data={consumptionByTypeBreakdown}
+                    config={{
+                        consumption: { label: 'Consumption (m³)', color: '#A2D0C8' }
+                    }}
+                    title="Monthly Consumption Breakdown"
+                    height="h-[300px]"
+                    showLegend={false}
+                />
+                <ModernDonutChart
+                    data={[{name: 'Commercial', value: 100}]}
+                    config={{
+                        value: { label: 'Commercial', color: '#10B981' }
+                    }}
+                    title="Type Distribution"
+                    height="h-[300px]"
+                    showLegend={false}
+                />
             </div>
         </div>
     );
@@ -582,29 +545,24 @@ const FirefightingModule = () => {
                 ))}
             </div>
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">System Status Distribution</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                             <Pie data={systemStatusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
-                                {systemStatusData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} /> <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                 </Card>
-                 <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Equipment by Type</h3>
-                     <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={equipmentByTypeData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-                            <XAxis dataKey="name" fontSize={10} angle={-45} textAnchor="end" height={50} tickLine={false} axisLine={false} />
-                            <YAxis fontSize={12} tickLine={false} axisLine={false}/> 
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="count" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                 </Card>
+                 <ModernDonutChart
+                    data={systemStatusData}
+                    config={{
+                        value: { label: 'Status Distribution', color: '#8884d8' }
+                    }}
+                    title="System Status Distribution"
+                    height="h-[250px]"
+                    showLegend={true}
+                 />
+                 <ModernBarChart
+                    data={equipmentByTypeData}
+                    config={{
+                        count: { label: 'Equipment Count', color: '#8884d8' }
+                    }}
+                    title="Equipment by Type"
+                    height="h-[250px]"
+                    showLegend={false}
+                 />
              </div>
              <Card>
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">

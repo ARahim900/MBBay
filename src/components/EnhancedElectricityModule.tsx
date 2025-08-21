@@ -1,24 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { 
+  ModernAreaChart, 
+  ModernBarChart, 
+  ModernLineChart, 
+  ChartConfig 
+} from './ui/ModernChart';
 import { TrendingUp, Download, Database, LayoutGrid, Tag, RefreshCw, Calendar, ChevronDown, Search, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-// Custom Tooltip Component
-const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string | number }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white/80 dark:bg-[#1A181F]/80 backdrop-blur-md p-3 rounded-lg shadow-lg border border-gray-200 dark:border-white/20">
-                <p className="label font-semibold text-gray-800 dark:text-gray-200">{`${label}`}</p>
-                {payload.map((pld, index) => (
-                    <div key={index} style={{ color: pld.color }}>
-                        {`${pld.name}: ${typeof pld.value === 'number' ? pld.value.toLocaleString() : pld.value}`}
-                    </div>
-                ))}
-            </div>
-        );
-    }
-    return null;
-};
 
 // Card Component
 const Card = ({ children, className = '' }) => {
@@ -237,26 +226,19 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
             </div>
             
             {/* Chart */}
-            <Card>
-                <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">
-                    Monthly Trend for {selectedType}
-                </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={trendData}>
-                        <defs>
-                            <linearGradient id="colorConsumption" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#10B981" stopOpacity={0.7}/>
-                                <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" />
-                        <XAxis dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="consumption" stroke="#10B981" fill="url(#colorConsumption)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-            </Card>
+            <ModernAreaChart
+                data={trendData}
+                config={{
+                    consumption: {
+                        label: 'Consumption (kWh)',
+                        color: '#10B981'
+                    }
+                }}
+                title={`Monthly Trend for ${selectedType}`}
+                height="h-[300px]"
+                showLegend={false}
+                curved={true}
+            />
             
             {/* Table */}
             <Card>
@@ -422,41 +404,33 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
             
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">
-                        Monthly Consumption Trend
-                    </h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={monthlyTrendData}>
-                            <defs>
-                                <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.7}/>
-                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 200, 200, 0.1)" />
-                            <XAxis dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Area type="monotone" dataKey="consumption" stroke="#8b5cf6" fill="url(#colorTrend)" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </Card>
+                <ModernAreaChart
+                    data={monthlyTrendData}
+                    config={{
+                        consumption: {
+                            label: 'Consumption (kWh)',
+                            color: '#8b5cf6'
+                        }
+                    }}
+                    title="Monthly Consumption Trend"
+                    height="h-[300px]"
+                    showLegend={false}
+                    curved={true}
+                />
                 
-                <Card>
-                    <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">
-                        Consumption by Type
-                    </h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={consumptionByTypeData} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(200, 200, 200, 0.1)" />
-                            <XAxis type="number" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} />
-                            <YAxis type="category" dataKey="name" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false} width={120} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="value" fill="#10B981" radius={[0, 8, 8, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </Card>
+                <ModernBarChart
+                    data={consumptionByTypeData}
+                    config={{
+                        value: {
+                            label: 'Consumption (kWh)',
+                            color: '#10B981'
+                        }
+                    }}
+                    title="Consumption by Type"
+                    height="h-[300px]"
+                    showLegend={false}
+                    horizontal={true}
+                />
             </div>
         </div>
     );

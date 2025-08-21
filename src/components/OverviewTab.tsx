@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { AreaChart, Area, LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, Tooltip } from 'recharts'
 import { fetchWaterMeters, calculateWaterMetricsForRange, getMonthlyBreakdown, filterByDateRange, monthLabels, type WaterMeter } from '../lib/waterData'
-import { DateRangeSlider } from './DateRangeSlider'
+import { ModernDateRangeSlider } from './ui/Slider'
 
 const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
   <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${className}`}>
@@ -115,7 +115,7 @@ export const OverviewTab = () => {
 
   return (
     <div className="space-y-6">
-      <DateRangeSlider 
+      <ModernDateRangeSlider 
         onRangeChange={handleDateRangeChange}
         defaultStart={startMonth}
         defaultEnd={endMonth}

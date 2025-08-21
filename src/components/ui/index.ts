@@ -5,6 +5,7 @@ export { Button } from './Button';
 export { Navigation, Breadcrumb } from './Navigation';
 export { Table } from './Table';
 export { Sidebar } from './Sidebar';
+export { Slider, ModernDateRangeSlider } from './Slider';
 export { 
   ChartContainer, 
   ModernAreaChart, 
@@ -12,3 +13,15 @@ export {
   ModernLineChart, 
   DonutChart 
 } from './Chart';
+export { 
+  ChartContainer as ModernChartContainer,
+  ModernAreaChart as EnhancedAreaChart, 
+  ModernBarChart as EnhancedBarChart, 
+  ModernLineChart as EnhancedLineChart, 
+  ModernDonutChart,
+  ChartTooltipContent,
+  ChartTooltip,
+  ChartLegendContent,
+  ChartLegend,
+  type ChartConfig
+} from './ModernChart';
