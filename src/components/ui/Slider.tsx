@@ -268,6 +268,64 @@ export const Slider: React.FC<SliderProps> = ({
   );
 };
 
+// Compact Range Slider for specific sections
+interface CompactRangeSliderProps {
+  onRangeChange: (startMonth: number, endMonth: number) => void;
+  defaultStart?: number;
+  defaultEnd?: number;
+  className?: string;
+  months: { label: string; value: number }[];
+  title?: string;
+}
+
+export const CompactRangeSlider: React.FC<CompactRangeSliderProps> = ({
+  onRangeChange,
+  defaultStart = 0,
+  defaultEnd = 2,
+  className = '',
+  months,
+  title = "Date Range"
+}) => {
+  const [values, setValues] = useState<[number, number]>([defaultStart, defaultEnd]);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleRangeChange = useCallback((newValues: [number, number]) => {
+    setValues(newValues);
+    setIsAnimating(true);
+    
+    setTimeout(() => {
+      onRangeChange(newValues[0], newValues[1]);
+      setIsAnimating(false);
+    }, 200);
+  }, [onRangeChange]);
+
+  return (
+    <div className={`bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-200/60 dark:border-white/10 p-3 ${className}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          {title}: {months[values[0]]?.label} to {months[values[1]]?.label}
+        </span>
+        {isAnimating && (
+          <div className="w-2 h-2 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+        )}
+      </div>
+      
+      <Slider
+        defaultValue={values}
+        min={0}
+        max={months.length - 1}
+        step={1}
+        onValueChange={handleRangeChange}
+        marks={months}
+        showLabels={false}
+        showTooltips={true}
+        color="#f97316"
+        className="py-1"
+      />
+    </div>
+  );
+};
+
 // Range Slider specifically for date ranges
 interface DateRangeSliderProps {
   onRangeChange: (startMonth: number, endMonth: number) => void;
@@ -306,38 +364,38 @@ export const ModernDateRangeSlider: React.FC<DateRangeSliderProps> = ({
   }, [onRangeChange]);
 
   return (
-    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md border border-gray-200/80 dark:border-white/10 p-6 transition-all duration-300 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Date Range Filter
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Select the time period for analysis
-        </p>
+    <div className={`bg-white dark:bg-[#2C2834] rounded-lg shadow-sm border border-gray-200/80 dark:border-white/10 p-4 transition-all duration-300 ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Date Range:
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {months[defaultStart]?.label} - {months[defaultEnd]?.label}
+          </span>
+        </div>
+        {isAnimating && (
+          <div className="flex items-center gap-1 text-xs text-green-600">
+            <div className="w-3 h-3 border border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            Updating...
+          </div>
+        )}
       </div>
 
-      <Slider
-        defaultValue={[defaultStart, defaultEnd]}
-        min={0}
-        max={6}
-        step={1}
-        onValueChange={handleRangeChange}
-        marks={months}
-        showLabels={true}
-        showTooltips={true}
-        color="#10b981"
-        className="mb-2"
-      />
-
-      {/* Loading indicator */}
-      {isAnimating && (
-        <div className="flex items-center justify-center mt-4">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-            Updating data...
-          </div>
-        </div>
-      )}
+      <div className="relative">
+        <Slider
+          defaultValue={[defaultStart, defaultEnd]}
+          min={0}
+          max={6}
+          step={1}
+          onValueChange={handleRangeChange}
+          marks={months}
+          showLabels={true}
+          showTooltips={false}
+          color="#10b981"
+          className="py-2"
+        />
+      </div>
     </div>
   );
 };

@@ -5,7 +5,7 @@ import {
   ModernLineChart, 
   ChartConfig 
 } from './ui/ModernChart';
-import { ModernDateRangeSlider } from './ui/Slider';
+import { CompactRangeSlider } from './ui/Slider';
 import { TrendingUp, Download, Database, LayoutGrid, Tag, RefreshCw, Calendar, ChevronDown, Search, Filter } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -99,9 +99,10 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     const meterCount = filteredMeters.length;
     const topConsumer = getTopConsumer(filteredMeters, dateRange.start, dateRange.end);
     
-    // Generate monthly trend data
-    const trendData = monthColumns.map((col, idx) => ({
-        month: monthLabels[idx],
+    // Generate monthly trend data - filtered by selected range
+    const selectedColumns = monthColumns.slice(dateRange.start, dateRange.end + 1);
+    const trendData = selectedColumns.map((col, idx) => ({
+        month: monthLabels[dateRange.start + idx],
         consumption: filteredMeters.reduce((sum: number, meter: any) => sum + (meter[col] || 0), 0)
     }));
     
@@ -143,11 +144,13 @@ const AnalysisByTypeTab = ({ meters, dateRange, onDateRangeChange }: any) => {
                 </div>
             </Card>
             
-            {/* Modern Range Slider */}
-            <ModernDateRangeSlider 
+            {/* Compact Range Slider */}
+            <CompactRangeSlider 
                 onRangeChange={handleRangeChange}
                 defaultStart={dateRange.start}
                 defaultEnd={dateRange.end}
+                months={monthMapping}
+                title="Date Range Filter"
             />
             
             {/* Analysis Title */}
@@ -272,9 +275,10 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     const totalMeters = meters?.length || 0;
     const topConsumer = getTopConsumer(meters || [], dateRange.start, dateRange.end);
     
-    // Generate monthly trend data
-    const monthlyTrendData = monthColumns.map((col, idx) => ({
-        month: monthLabels[idx],
+    // Generate monthly trend data - filtered by selected range
+    const selectedColumns = monthColumns.slice(dateRange.start, dateRange.end + 1);
+    const monthlyTrendData = selectedColumns.map((col, idx) => ({
+        month: monthLabels[dateRange.start + idx],
         consumption: (meters || []).reduce((sum: number, meter: any) => sum + (meter[col] || 0), 0)
     }));
     
@@ -306,11 +310,13 @@ const OverviewTab = ({ meters, dateRange, onDateRangeChange }: any) => {
     
     return (
         <div className="space-y-6">
-            {/* Modern Range Slider */}
-            <ModernDateRangeSlider 
+            {/* Compact Range Slider */}
+            <CompactRangeSlider 
                 onRangeChange={handleRangeChange}
                 defaultStart={dateRange.start}
                 defaultEnd={dateRange.end}
+                months={monthMapping}
+                title="Date Range Filter"
             />
             
             {/* Title */}

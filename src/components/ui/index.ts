@@ -5,7 +5,7 @@ export { Button } from './Button';
 export { Navigation, Breadcrumb } from './Navigation';
 export { Table } from './Table';
 export { Sidebar } from './Sidebar';
-export { Slider, ModernDateRangeSlider } from './Slider';
+export { Slider, ModernDateRangeSlider, CompactRangeSlider } from './Slider';
 export { 
   ChartContainer, 
   ModernAreaChart, 
