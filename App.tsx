@@ -709,7 +709,13 @@ const Sidebar = () => {
     const navItems = [ { name: 'Water', icon: Droplets }, { name: 'Electricity', icon: Power }, { name: 'HVAC System', icon: BarChart2 }, { name: 'Firefighting & Alarm', icon: Flame }, { name: 'Contractor Tracker', icon: HardHat }, { name: 'STP Plant', icon: Settings }, ];
     return (
         <aside className={`bg-[#4E4456] text-white fixed top-0 left-0 z-40 w-64 h-screen transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10"> <h1 className="text-2xl font-bold">Muscat Bay</h1> <button onClick={toggleSidebar} className="md:hidden text-white"> <X className="h-6 w-6" /> </button> </div>
+            <div className="flex items-center justify-between p-6 border-b border-white/10"> 
+                <div className="flex items-center gap-3">
+                    <img src="/MB-logo.png" alt="Muscat Bay Logo" className="w-10 h-10 rounded-lg" />
+                    <h1 className="text-xl font-bold">Muscat Bay</h1>
+                </div>
+                <button onClick={toggleSidebar} className="md:hidden text-white"> <X className="h-6 w-6" /> </button> 
+            </div>
             <nav className="p-4">
                 <ul>
                     {navItems.map(({ name, icon: Icon }) => {
