@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { PieChart, Pie, Cell, AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, Tooltip } from 'recharts'
-import { CheckCircle, RefreshCw } from 'lucide-react'
+import { PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Legend, Tooltip, ReferenceLine, ReferenceArea } from 'recharts'
+import { CheckCircle, RefreshCw, TrendingUp, Activity } from 'lucide-react'
 import { fetchWaterMeters, getZoneData, getMonthlyBreakdown, filterByDateRange, monthLabels, type WaterMeter } from '../lib/waterData'
 
 const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => (
@@ -11,14 +11,28 @@ const Card = ({ children, className = '' }: { children: React.ReactNode, classNa
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: any[], label?: string | number }) => {
   if (active && payload && payload.length) {
+    const data = payload[0]?.payload
+    const isHighlighted = data?.isHighlighted
+    
     return (
-      <div className="bg-white/80 dark:bg-[#1A181F]/80 backdrop-blur-md p-3 rounded-lg shadow-lg border border-gray-200 dark:border-white/20">
-        <p className="label font-semibold text-gray-800 dark:text-gray-200">{`${label}`}</p>
-        {payload.map((pld, index) => (
-          <div key={index} style={{ color: pld.color }}>
-            {`${pld.name}: ${pld.value.toLocaleString()}`}
-          </div>
-        ))}
+      <div className={`bg-white/95 dark:bg-[#1A181F]/95 backdrop-blur-md p-4 rounded-lg shadow-xl border ${
+        isHighlighted ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-200 dark:border-white/20'
+      }`}>
+        <p className="label font-semibold text-gray-800 dark:text-gray-200 mb-2">
+          {`${label}`}
+          {isHighlighted && <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Selected Month</span>}
+        </p>
+        {payload.map((pld, index) => {
+          // Skip opacity and highlight fields
+          if (pld.dataKey === 'opacity' || pld.dataKey === 'isHighlighted' || pld.dataKey === 'monthIndex') return null
+          
+          return (
+            <div key={index} className="flex items-center justify-between gap-4" style={{ color: pld.color }}>
+              <span className="text-sm">{pld.name}:</span>
+              <span className="font-medium">{pld.value.toLocaleString()} m³</span>
+            </div>
+          )
+        }).filter(Boolean)}
       </div>
     )
   }
@@ -110,8 +124,14 @@ export const ZoneAnalysisTab = () => {
       const zoneAnalysis = getZoneData(waterMeters, selectedZone, selectedMonth, selectedMonth)
       setZoneData(zoneAnalysis)
       
-      // Create monthly trend data for the selected zone (full year view)
-      const trendData = monthLabels.map((month, index) => {
+      // Create monthly trend data centered around selected month
+      // Show 3 months before and 3 months after selected month for focused view
+      const monthRange = 3 // Number of months to show before and after
+      const startIdx = Math.max(0, selectedMonth - monthRange)
+      const endIdx = Math.min(monthLabels.length - 1, selectedMonth + monthRange)
+      
+      const trendData = []
+      for (let index = startIdx; index <= endIdx; index++) {
         const bulkData = getMonthlyBreakdown(waterMeters, index, index, { zone: selectedZone, label: 'L2' })
         const individualData = getMonthlyBreakdown(waterMeters, index, index, { zone: selectedZone })
         
@@ -121,13 +141,20 @@ export const ZoneAnalysisTab = () => {
         const individualTotal = totalZone - bulkTotal
         const loss = bulkTotal - individualTotal
         
-        return {
-          month,
+        // Add highlighting flag for selected month
+        const isSelected = index === selectedMonth
+        
+        trendData.push({
+          month: monthLabels[index],
           'Zone Bulk': bulkTotal,
           'Individual Total': Math.max(0, individualTotal),
-          'Water Loss': Math.max(0, loss)
-        }
-      })
+          'Water Loss': Math.max(0, loss),
+          isHighlighted: isSelected,
+          monthIndex: index,
+          // Add opacity for visual focus
+          opacity: isSelected ? 1 : 0.7 - Math.abs(index - selectedMonth) * 0.1
+        })
+      }
       
       setMonthlyTrend(trendData)
       setIsAnimating(false)
@@ -233,50 +260,248 @@ export const ZoneAnalysisTab = () => {
         </div>
       </Card>
 
-      <Card>
-        <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4">Zone Consumption Trend</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={monthlyTrend} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+      <Card className={`transition-all duration-500 ${isAnimating ? 'opacity-70' : 'opacity-100'}`}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white">
+              Zone Consumption Trend
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Showing data around {monthLabels[selectedMonth]} (±3 months)
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Activity className={`w-5 h-5 ${isAnimating ? 'animate-pulse text-blue-500' : 'text-gray-400'}`} />
+            <span className="text-xs text-gray-500">
+              {isAnimating ? 'Updating...' : 'Live'}
+            </span>
+          </div>
+        </div>
+        
+        <ResponsiveContainer width="100%" height={350}>
+          <LineChart 
+            data={monthlyTrend} 
+            margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+            key={`chart-${selectedMonth}-${selectedZone}`} // Force re-render on change
+          >
             <defs>
               <linearGradient id="colorBulk" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.7}/>
-                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.2}/>
+              </linearGradient>
+              <linearGradient id="colorIndividual" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0.2}/>
+              </linearGradient>
+              <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#F94144" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#F94144" stopOpacity={0.2}/>
               </linearGradient>
             </defs>
+            
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(200,200,200,0.1)" />
-            <XAxis dataKey="month" stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false}/>
-            <YAxis stroke="#9E9AA7" fontSize={12} tickLine={false} axisLine={false}/>
+            
+            <XAxis 
+              dataKey="month" 
+              stroke="#9E9AA7" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={false}
+              tick={({ x, y, payload }) => {
+                const isSelected = monthlyTrend.find(d => d.month === payload.value)?.isHighlighted
+                return (
+                  <text 
+                    x={x} 
+                    y={y} 
+                    dy={16} 
+                    textAnchor="middle" 
+                    fill={isSelected ? '#3B82F6' : '#9E9AA7'}
+                    fontSize={isSelected ? 13 : 12}
+                    fontWeight={isSelected ? 600 : 400}
+                  >
+                    {payload.value}
+                  </text>
+                )
+              }}
+            />
+            
+            <YAxis 
+              stroke="#9E9AA7" 
+              fontSize={12} 
+              tickLine={false} 
+              axisLine={false}
+              tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
+            />
+            
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{fontSize: "14px"}}/>
-            <Area 
-              type="monotone" 
-              dataKey="Zone Bulk" 
-              stroke="#3B82F6" 
-              fillOpacity={1} 
-              fill="url(#colorBulk)" 
-              animationDuration={800}
+            
+            <Legend 
+              wrapperStyle={{fontSize: "14px"}}
+              iconType="line"
+            />
+            
+            {/* Highlight area for selected month */}
+            {monthlyTrend.map((entry, index) => {
+              if (entry.isHighlighted) {
+                return (
+                  <ReferenceArea
+                    key={`ref-${index}`}
+                    x1={index > 0 ? monthlyTrend[index - 1].month : entry.month}
+                    x2={index < monthlyTrend.length - 1 ? monthlyTrend[index + 1].month : entry.month}
+                    y1={0}
+                    y2={Math.max(...monthlyTrend.map(d => Math.max(d['Zone Bulk'], d['Individual Total'], d['Water Loss'])))}
+                    fill="#3B82F6"
+                    fillOpacity={0.1}
+                    strokeOpacity={0.3}
+                  />
+                )
+              }
+              return null
+            })}
+            
+            {/* Zone Bulk Line with area */}
+            <Area
+              type="monotone"
+              dataKey="Zone Bulk"
+              stroke="#3B82F6"
+              strokeWidth={3}
+              fill="url(#colorBulk)"
+              fillOpacity={0.3}
+              animationDuration={1000}
               animationBegin={0}
+              dot={(props) => {
+                const { cx, cy, payload } = props
+                if (payload.isHighlighted) {
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={6}
+                      fill="#3B82F6"
+                      stroke="#fff"
+                      strokeWidth={2}
+                      className="animate-pulse"
+                    />
+                  )
+                }
+                return <circle cx={cx} cy={cy} r={4} fill="#3B82F6" stroke="#fff" strokeWidth={1} />
+              }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="Individual Total" 
-              stroke="#10B981" 
-              strokeWidth={2} 
-              fill="none" 
-              animationDuration={800}
-              animationBegin={100}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="Water Loss" 
-              stroke="#F94144" 
-              strokeWidth={2} 
-              fill="none" 
-              animationDuration={800}
+            
+            {/* Individual Total Line */}
+            <Line
+              type="monotone"
+              dataKey="Individual Total"
+              stroke="#10B981"
+              strokeWidth={3}
+              strokeDasharray="5 5"
+              animationDuration={1000}
               animationBegin={200}
+              dot={(props) => {
+                const { cx, cy, payload } = props
+                if (payload.isHighlighted) {
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={6}
+                      fill="#10B981"
+                      stroke="#fff"
+                      strokeWidth={2}
+                      className="animate-pulse"
+                    />
+                  )
+                }
+                return <circle cx={cx} cy={cy} r={4} fill="#10B981" stroke="#fff" strokeWidth={1} />
+              }}
             />
-          </AreaChart>
+            
+            {/* Water Loss Line */}
+            <Line
+              type="monotone"
+              dataKey="Water Loss"
+              stroke="#F94144"
+              strokeWidth={2}
+              strokeDasharray="2 2"
+              animationDuration={1000}
+              animationBegin={400}
+              dot={(props) => {
+                const { cx, cy, payload } = props
+                if (payload.isHighlighted) {
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={6}
+                      fill="#F94144"
+                      stroke="#fff"
+                      strokeWidth={2}
+                      className="animate-pulse"
+                    />
+                  )
+                }
+                return <circle cx={cx} cy={cy} r={3} fill="#F94144" stroke="#fff" strokeWidth={1} />
+              }}
+            />
+            
+            {/* Reference line for selected month */}
+            {monthlyTrend.map((entry, index) => {
+              if (entry.isHighlighted) {
+                return (
+                  <ReferenceLine 
+                    key={`line-${index}`}
+                    x={entry.month} 
+                    stroke="#3B82F6" 
+                    strokeWidth={2}
+                    strokeDasharray="8 8"
+                    label={{
+                      value: "Selected",
+                      position: "top",
+                      fill: "#3B82F6",
+                      fontSize: 12
+                    }}
+                  />
+                )
+              }
+              return null
+            })}
+          </LineChart>
         </ResponsiveContainer>
+        
+        {/* Chart Legend with values */}
+        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          {monthlyTrend.find(d => d.isHighlighted) && (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Zone Bulk</span>
+                </div>
+                <span className="text-sm font-semibold">
+                  {monthlyTrend.find(d => d.isHighlighted)?.['Zone Bulk'].toLocaleString()} m³
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Individual</span>
+                </div>
+                <span className="text-sm font-semibold">
+                  {monthlyTrend.find(d => d.isHighlighted)?.['Individual Total'].toLocaleString()} m³
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Water Loss</span>
+                </div>
+                <span className="text-sm font-semibold">
+                  {monthlyTrend.find(d => d.isHighlighted)?.['Water Loss'].toLocaleString()} m³
+                </span>
+              </div>
+            </>
+          )}
+        </div>
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
