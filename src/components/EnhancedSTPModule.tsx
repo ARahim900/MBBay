@@ -480,6 +480,17 @@ export const EnhancedSTPModule = () => {
     const formatNumber = (num: number) => num.toLocaleString();
     const formatCurrency = (num: number) => num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
+    // Debug: Log data state for troubleshooting
+    console.log('=== STP MODULE DATA STATE ===');
+    console.log('All data length:', allData?.length || 0);
+    console.log('Filtered data length:', filteredData?.length || 0);
+    console.log('Monthly data length:', monthlyData?.length || 0);
+    console.log('Monthly data sample:', monthlyData?.slice(0, 2));
+    console.log('Date range:', dateRange);
+    console.log('Loading:', loading);
+    console.log('Error:', error);
+    console.log('============================');
+    
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -626,17 +637,17 @@ export const EnhancedSTPModule = () => {
                 
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <Card className="pt-0">
-                        <div className="border-b py-5 px-6">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                Monthly Financials (OMR)
-                            </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                Income from tanker fees vs water cost savings
-                            </p>
-                        </div>
-                        <div className="px-2 pt-4 sm:px-6 sm:pt-6">
-                            {monthlyData && monthlyData.length > 0 ? (
+                    {(() => {
+                        // Validate monthly data for chart
+                        const hasValidData = monthlyData && monthlyData.length > 0;
+                        const hasFinancialData = hasValidData && monthlyData.some(item => 
+                            (item.income > 0 || item.savings > 0) && item.month
+                        );
+                        
+                        console.log('Chart validation:', { hasValidData, hasFinancialData, dataLength: monthlyData?.length });
+                        
+                        if (hasValidData && hasFinancialData) {
+                            return (
                                 <ModernBarChart
                                     data={monthlyData}
                                     config={{
@@ -649,22 +660,32 @@ export const EnhancedSTPModule = () => {
                                             color: "#06B6D4"
                                         }
                                     }}
-                                    title=""
-                                    description=""
-                                    height="h-[250px]"
+                                    title="Monthly Financials (OMR)"
+                                    description="Income from tanker fees vs water cost savings"
+                                    height="h-[300px]"
                                     showLegend={true}
                                     stacked={false}
                                 />
-                            ) : (
-                                <div className="h-[250px] flex items-center justify-center text-gray-500">
-                                    <div className="text-center">
-                                        <p>No financial data available for selected period</p>
-                                        <p className="text-sm mt-2">Select a different date range or check data connection</p>
+                            );
+                        } else {
+                            return (
+                                <Card>
+                                    <div className="h-[300px] flex items-center justify-center text-gray-500">
+                                        <div className="text-center">
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Monthly Financials (OMR)</h3>
+                                            <p>No financial data available for selected period</p>
+                                            <p className="text-sm mt-2">
+                                                Data: {allData?.length || 0} records | 
+                                                Filtered: {filteredData?.length || 0} | 
+                                                Monthly: {monthlyData?.length || 0}
+                                            </p>
+                                            <p className="text-xs mt-1">Select a different date range or check data connection</p>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
+                                </Card>
+                            );
+                        }
+                    })()}
                     
                     <ModernLineChart
                         data={monthlyData}
@@ -688,12 +709,26 @@ export const EnhancedSTPModule = () => {
                     <div className="flex justify-between items-center mb-4">
                         <div>
                             <h3 className="text-lg font-semibold text-gray-900">Database Connection Status</h3>
-                            <p className="text-sm text-gray-600">Total records: {allData.length} | Filtered: {filteredData.length}</p>
+                            <p className="text-sm text-gray-600">
+                                Total records: {allData?.length || 0} | 
+                                Filtered: {filteredData?.length || 0} | 
+                                Period: {dateRange.start} to {dateRange.end}
+                            </p>
+                            {error && (
+                                <p className="text-xs text-orange-600 mt-1">Using fallback data: {error}</p>
+                            )}
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            allData.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                            {allData.length > 0 ? 'Connected' : 'No Data'}
+                        <div className="flex items-center gap-2">
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                allData && allData.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                                {allData && allData.length > 0 ? 'Data Available' : 'No Data'}
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                !error ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'
+                            }`}>
+                                {!error ? 'Supabase Connected' : 'Using Fallback'}
+                            </div>
                         </div>
                     </div>
                 </div>
