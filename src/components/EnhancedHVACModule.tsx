@@ -205,7 +205,15 @@ const EditModal = ({ issue, isOpen, onClose, onSave }: any) => {
                         <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4" />
-                                {saveError}
+                                <div>
+                                    <div className="font-semibold">{saveError}</div>
+                                    {saveError.includes('permission') && (
+                                        <div className="mt-1 text-xs">
+                                            To fix: Go to Supabase Dashboard → Table Editor → hvac_tracker → 
+                                            Click shield icon → Disable RLS or add UPDATE policy
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -362,8 +370,8 @@ export const EnhancedHVACModule = () => {
 
     const handleSave = async (updatedIssue: any) => {
         try {
-            console.log('=== HVAC SAVE ATTEMPT ===');
-            console.log('Attempting to save:', updatedIssue);
+            console.log('=== HVAC DATABASE SAVE ===');
+            console.log('Record to save:', updatedIssue);
             
             if (!updatedIssue?.id) {
                 throw new Error('No ID found - cannot update record');
@@ -371,107 +379,104 @@ export const EnhancedHVACModule = () => {
             
             const id = updatedIssue.id;
             
-            // Method 1: Try direct update with minimal data
-            console.log('Method 1: Direct update attempt...');
-            const { error: directError } = await supabase
+            // First verify the record exists
+            console.log('Step 1: Verifying record exists...');
+            const { data: existingRecord, error: fetchError } = await supabase
                 .from('hvac_tracker')
-                .update({
-                    building: updatedIssue.building || '',
-                    main_system: updatedIssue.main_system || '',
-                    equipment_asset_id: updatedIssue.equipment_asset_id || '',
-                    finding_issue_description: updatedIssue.finding_issue_description || '',
-                    priority: updatedIssue.priority || 'Medium',
-                    status: updatedIssue.status || 'Open - Action Required',
-                    latest_update_notes: updatedIssue.latest_update_notes || ''
-                })
-                .eq('id', id);
+                .select('*')
+                .eq('id', id)
+                .single();
                 
-            if (!directError) {
-                console.log('✅ Direct update succeeded!');
-                // Update local state immediately
-                setIssues(prevIssues => 
-                    prevIssues.map(issue => 
-                        issue.id === id ? { ...issue, ...updatedIssue } : issue
-                    )
-                );
-                return updatedIssue;
+            if (fetchError) {
+                console.error('Cannot find record:', fetchError);
+                throw new Error(`Record ID ${id} not found in database`);
             }
             
-            console.log('❌ Direct update failed:', directError);
+            console.log('Record found:', existingRecord);
             
-            // Method 2: Try with RPC/Function call (if your Supabase has custom functions)
-            console.log('Method 2: Trying alternative approach...');
+            // Prepare update data - ONLY the fields that can be updated
+            const updateData = {
+                building: updatedIssue.building,
+                main_system: updatedIssue.main_system,
+                equipment_asset_id: updatedIssue.equipment_asset_id,
+                finding_issue_description: updatedIssue.finding_issue_description,
+                priority: updatedIssue.priority,
+                status: updatedIssue.status,
+                latest_update_notes: updatedIssue.latest_update_notes
+            };
             
-            // Method 3: Try updating each field individually
-            console.log('Method 3: Individual field updates...');
-            const fields = [
-                { key: 'building', value: updatedIssue.building },
-                { key: 'main_system', value: updatedIssue.main_system },
-                { key: 'equipment_asset_id', value: updatedIssue.equipment_asset_id },
-                { key: 'finding_issue_description', value: updatedIssue.finding_issue_description },
-                { key: 'priority', value: updatedIssue.priority },
-                { key: 'status', value: updatedIssue.status },
-                { key: 'latest_update_notes', value: updatedIssue.latest_update_notes }
-            ];
+            console.log('Step 2: Updating database with:', updateData);
             
-            let successCount = 0;
-            for (const field of fields) {
-                const updateObj = { [field.key]: field.value };
-                const { error: fieldError } = await supabase
-                    .from('hvac_tracker')
-                    .update(updateObj)
-                    .eq('id', id);
-                    
-                if (!fieldError) {
-                    successCount++;
-                    console.log(`✅ Updated ${field.key}`);
-                } else {
-                    console.log(`❌ Failed to update ${field.key}:`, fieldError);
+            // Perform the update
+            const { data: updateResult, error: updateError, count } = await supabase
+                .from('hvac_tracker')
+                .update(updateData)
+                .eq('id', id)
+                .select();
+                
+            console.log('Update result:', { data: updateResult, error: updateError, count });
+            
+            if (updateError) {
+                console.error('Database update error:', updateError);
+                
+                // Check if it's a permission issue
+                if (updateError.message?.includes('permission') || 
+                    updateError.message?.includes('policy') ||
+                    updateError.code === '42501') {
+                    throw new Error('Database permission denied. Please check Row Level Security policies in Supabase.');
                 }
+                
+                throw new Error(`Database update failed: ${updateError.message}`);
             }
             
-            if (successCount > 0) {
-                console.log(`✅ Partial success: ${successCount}/${fields.length} fields updated`);
+            // Verify the update actually happened
+            console.log('Step 3: Verifying update...');
+            const { data: verifyData, error: verifyError } = await supabase
+                .from('hvac_tracker')
+                .select('*')
+                .eq('id', id)
+                .single();
+                
+            if (verifyError) {
+                console.error('Verification failed:', verifyError);
+            } else {
+                console.log('✅ Database updated successfully! Verified data:', verifyData);
+                
+                // Update local state with the verified data from database
                 setIssues(prevIssues => 
                     prevIssues.map(issue => 
-                        issue.id === id ? { ...issue, ...updatedIssue } : issue
+                        issue.id === id ? verifyData : issue
                     )
                 );
-                return updatedIssue;
+                
+                // Refresh the full list to ensure sync
+                setTimeout(() => {
+                    console.log('Refreshing full data list...');
+                    fetchIssues();
+                }, 1000);
+                
+                return verifyData;
             }
             
-            // Method 4: Last resort - simulate success locally only
-            console.log('Method 4: Local update only (simulated save)...');
-            console.warn('⚠️  Database update failed, updating locally only');
-            
+            // If we got here but no verified data, still update local state
+            const mergedData = { ...existingRecord, ...updateData };
             setIssues(prevIssues => 
                 prevIssues.map(issue => 
-                    issue.id === id ? { ...issue, ...updatedIssue } : issue
+                    issue.id === id ? mergedData : issue
                 )
             );
             
-            // Show a warning but don't throw an error
-            console.log('✅ Local update completed (database may need manual sync)');
-            return updatedIssue;
+            return mergedData;
             
         } catch (error: any) {
-            console.error('❌ All save methods failed:', error);
+            console.error('❌ Database save failed:', error);
             
-            // Even if everything fails, try to update locally
-            if (updatedIssue?.id) {
-                console.log('🔄 Attempting emergency local update...');
-                setIssues(prevIssues => 
-                    prevIssues.map(issue => 
-                        issue.id === updatedIssue.id ? { ...issue, ...updatedIssue } : issue
-                    )
-                );
-                
-                // Return success but with a warning
-                console.log('⚠️  Emergency local update completed');
-                return updatedIssue;
+            // Check if it's a Supabase configuration issue
+            if (error.message?.includes('permission') || error.message?.includes('policy')) {
+                throw new Error('Database permission issue. Please disable Row Level Security for hvac_tracker table in Supabase dashboard or add proper policies.');
             }
             
-            throw new Error('Save failed: Unable to update record locally or in database');
+            throw error;
         }
     };
 
