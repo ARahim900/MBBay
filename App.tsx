@@ -18,6 +18,8 @@ interface AppState {
   setActiveModule: (module: string) => void;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
+  isSidebarCollapsed: boolean;
+  toggleSidebarCollapse: () => void;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -27,6 +29,8 @@ const useAppStore = create<AppState>((set) => ({
   setActiveModule: (module) => set({ activeModule: module }),
   isSidebarOpen: false,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  isSidebarCollapsed: false,
+  toggleSidebarCollapse: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
   isDarkMode: false,
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 }));
@@ -706,24 +710,74 @@ const STPPlantModule = () => {
 
 // -- LAYOUT & APP --
 const Sidebar = () => {
-    const { activeModule, setActiveModule, isSidebarOpen, toggleSidebar } = useAppStore();
-    const navItems = [ { name: 'Water', icon: Droplets }, { name: 'Electricity', icon: Power }, { name: 'HVAC System', icon: BarChart2 }, { name: 'Firefighting & Alarm', icon: Flame }, { name: 'Contractor Tracker', icon: HardHat }, { name: 'STP Plant', icon: Settings }, ];
+    const { activeModule, setActiveModule, isSidebarOpen, toggleSidebar, isSidebarCollapsed, toggleSidebarCollapse } = useAppStore();
+    const navItems = [ 
+        { name: 'Water', icon: Droplets }, 
+        { name: 'Electricity', icon: Power }, 
+        { name: 'HVAC System', icon: BarChart2 }, 
+        { name: 'Firefighting & Alarm', icon: Flame }, 
+        { name: 'Contractor Tracker', icon: HardHat }, 
+        { name: 'STP Plant', icon: Settings }, 
+    ];
+    
     return (
-        <aside className={`bg-[#4E4456] text-white fixed top-0 left-0 z-40 w-64 h-screen transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-            <div className="flex items-center justify-between p-6 border-b border-white/10"> 
-                <div className="flex items-center gap-3">
-                    <img src="/MB-logo.png" alt="Muscat Bay Logo" className="w-10 h-10 rounded-lg" />
-                    <h1 className="text-xl font-bold">Muscat Bay</h1>
+        <aside className={`bg-[#4E4456] text-white fixed top-0 left-0 z-30 h-screen transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 ${
+            isSidebarCollapsed ? 'w-20' : 'w-64'
+        }`}>
+            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} p-6 border-b border-white/10 h-[73px]`}> 
+                <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+                    <img src="/MB-logo.png" alt="Muscat Bay Logo" className={`rounded-lg transition-all duration-300 ${isSidebarCollapsed ? 'w-8 h-8' : 'w-10 h-10'}`} />
+                    {!isSidebarCollapsed && <h1 className="text-xl font-bold">Muscat Bay</h1>}
                 </div>
-                <button onClick={toggleSidebar} className="md:hidden text-white"> <X className="h-6 w-6" /> </button> 
+                <button onClick={toggleSidebar} className="md:hidden text-white"> 
+                    <X className="h-6 w-6" /> 
+                </button> 
             </div>
+            
+            {/* Collapse Toggle Button - Desktop Only */}
+            <div className="hidden md:flex justify-end p-2 border-b border-white/10">
+                <button 
+                    onClick={toggleSidebarCollapse}
+                    className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200"
+                    title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    {isSidebarCollapsed ? (
+                        <ChevronRight className="h-5 w-5" />
+                    ) : (
+                        <Menu className="h-5 w-5" />
+                    )}
+                </button>
+            </div>
+            
             <nav className="p-4">
                 <ul>
                     {navItems.map(({ name, icon: Icon }) => {
                         const isActive = activeModule === name;
                         return (
-                            <li key={name} onClick={() => { setActiveModule(name); if (isSidebarOpen) toggleSidebar(); }} className={`flex items-center p-3 my-1 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'bg-[#A2D0C8] text-[#4E4456] shadow-lg' : 'text-gray-300 hover:bg-white/5 hover:translate-x-1'}`}>
-                                <Icon className="h-5 w-5 mr-4" /> <span className="font-medium">{name}</span>
+                            <li 
+                                key={name} 
+                                onClick={() => { 
+                                    setActiveModule(name); 
+                                    if (isSidebarOpen) toggleSidebar(); 
+                                }} 
+                                className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : ''} p-3 my-1 rounded-lg cursor-pointer transition-all duration-300 group relative ${
+                                    isActive 
+                                        ? 'bg-[#A2D0C8] text-[#4E4456] shadow-lg' 
+                                        : 'text-gray-300 hover:bg-white/5 hover:translate-x-1'
+                                }`}
+                                title={isSidebarCollapsed ? name : ''}
+                            >
+                                <Icon className={`h-5 w-5 ${isSidebarCollapsed ? '' : 'mr-4'}`} /> 
+                                {!isSidebarCollapsed && <span className="font-medium">{name}</span>}
+                                
+                                {/* Tooltip for collapsed sidebar */}
+                                {isSidebarCollapsed && (
+                                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                                        {name}
+                                    </div>
+                                )}
                             </li>
                         );
                     })}
@@ -733,21 +787,35 @@ const Sidebar = () => {
     );
 };
 const Header = () => {
-    const { activeModule, toggleSidebar, isDarkMode, toggleDarkMode } = useAppStore();
+    const { activeModule, toggleSidebar, isDarkMode, toggleDarkMode, isSidebarCollapsed } = useAppStore();
     return (
-        <header className="flex items-center justify-between p-4 bg-white/80 dark:bg-[#1A181F]/80 backdrop-blur-lg border-b border-[#E0E0E0] dark:border-white/10 sticky top-0 z-20">
-            <div className="flex items-center"> <button onClick={toggleSidebar} className="md:hidden mr-4 text-[#4E4456] dark:text-white"> <Menu className="h-6 w-6" /> </button> <h2 className="text-lg font-semibold text-[#4E4456] dark:text-white">{activeModule}</h2> </div>
+        <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-white/95 dark:bg-[#1A181F]/95 backdrop-blur-lg border-b border-[#E0E0E0] dark:border-white/10 h-[73px]">
+            <div className="flex items-center">
+                <button onClick={toggleSidebar} className="md:hidden mr-4 text-[#4E4456] dark:text-white"> 
+                    <Menu className="h-6 w-6" /> 
+                </button>
+                {/* Add padding based on sidebar state for desktop */}
+                <div className={`hidden md:block transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}></div>
+                <h2 className="text-lg font-semibold text-[#4E4456] dark:text-white ml-4">{activeModule}</h2>
+            </div>
             <div className="flex items-center space-x-4">
-                <button onClick={toggleDarkMode} className="text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> {isDarkMode ? '☀️' : '🌙'} </button>
-                <button className="relative text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> <Bell className="h-6 w-6" /> <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span> </button>
-                <div className="h-9 w-9 bg-[#A2D0C8] rounded-full flex items-center justify-center text-[#4E4456] font-bold"> <User className="h-5 w-5" /> </div>
+                <button onClick={toggleDarkMode} className="text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> 
+                    {isDarkMode ? '☀️' : '🌙'} 
+                </button>
+                <button className="relative text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> 
+                    <Bell className="h-6 w-6" /> 
+                    <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span> 
+                </button>
+                <div className="h-9 w-9 bg-[#A2D0C8] rounded-full flex items-center justify-center text-[#4E4456] font-bold"> 
+                    <User className="h-5 w-5" /> 
+                </div>
             </div>
         </header>
     );
 };
 
 export default function App() {
-  const { activeModule, isDarkMode } = useAppStore();
+  const { activeModule, isDarkMode, isSidebarCollapsed } = useAppStore();
   useEffect(() => { if (isDarkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } }, [isDarkMode]);
   const renderModule = () => {
     switch (activeModule) {
@@ -763,8 +831,11 @@ export default function App() {
   return (
     <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
       <Sidebar />
-      <div className="md:ml-64 transition-all duration-300 ease-in-out">
-        <Header />
+      <Header />
+      {/* Main content area that adapts to sidebar width */}
+      <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
+        isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+      }`}>
         <main className="p-6">
           {renderModule()}
         </main>
