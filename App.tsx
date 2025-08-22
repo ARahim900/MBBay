@@ -524,85 +524,108 @@ const fireSafetyEquipmentData = [
 ];
 
 const FirefightingModule = () => {
-    const StatusBadge = ({ status }) => {
-        const colors = {
-            Operational: 'bg-green-100 text-green-800', Critical: 'bg-red-100 text-red-800',
-            'Needs Attention': 'bg-yellow-100 text-yellow-800', Expired: 'bg-gray-100 text-gray-800',
-            'Maintenance Due': 'bg-blue-100 text-blue-800', High: 'bg-orange-100 text-orange-800', Medium: 'bg-yellow-100 text-yellow-800',
+    try {
+        const StatusBadge = ({ status }: { status: string }) => {
+            const colors: { [key: string]: string } = {
+                Operational: 'bg-green-100 text-green-800', 
+                Critical: 'bg-red-100 text-red-800',
+                'Needs Attention': 'bg-yellow-100 text-yellow-800', 
+                Expired: 'bg-gray-100 text-gray-800',
+                'Maintenance Due': 'bg-blue-100 text-blue-800', 
+                High: 'bg-orange-100 text-orange-800', 
+                Medium: 'bg-yellow-100 text-yellow-800',
+            };
+            return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100'}`}>{status}</span>;
         };
-        return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100'}`}>{status}</span>;
-    };
-    
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-                 <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System Management</h2>
-                 <p className="text-sm text-gray-500">Monitor and maintain fire safety equipment across all zones</p>
+        
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between mb-6">
+                     <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System Management</h2>
+                     <p className="text-sm text-gray-500">Monitor and maintain fire safety equipment across all zones</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {firefightingKpis.map((kpi, index) => {
+                        const IconComponent = kpi.icon;
+                        return (
+                            <Card key={kpi.title || index} className="flex items-center gap-4">
+                                <IconComponent className="w-8 h-8 text-gray-500" />
+                                <div>
+                                    <p className="text-sm text-gray-500">{kpi.title}</p>
+                                    <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi.value}</p>
+                                    <p className="text-xs text-gray-400">{kpi.subValue}</p>
+                                </div>
+                            </Card>
+                        );
+                    })}
+                </div>
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <ModernDonutChart
+                        data={systemStatusData}
+                        config={{
+                            value: { label: 'Status Distribution', color: theme.colors.primary }
+                        }}
+                        title="System Status Distribution"
+                        height="h-[250px]"
+                        showLegend={true}
+                     />
+                     <ModernBarChart
+                        data={equipmentByTypeData}
+                        config={{
+                            count: { label: 'Equipment Count', color: theme.colors.primary }
+                        }}
+                        title="Equipment by Type"
+                        height="h-[250px]"
+                        showLegend={false}
+                     />
+                 </div>
+                 <Card>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                        <input type="text" placeholder="Search Equipment..." className="p-2 border rounded-md dark:bg-white/10 col-span-1 md:col-span-2" />
+                        <select className="p-2 border rounded-md dark:bg-white/10"><option>All Zones</option></select>
+                        <select className="p-2 border rounded-md dark:bg-white/10"><option>All System Types</option></select>
+                        <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors active:scale-95">Apply Filters</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
+                                <tr>{['Equipment', 'Location', 'Status', 'Priority', 'Battery', 'Signal', 'Next Maintenance', 'Inspector'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
+                            </thead>
+                            <tbody>
+                                {fireSafetyEquipmentData.map((item, idx) => (
+                                    <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
+                                        <td className="px-4 py-2 font-medium">{item.equipment}<p className="text-xs text-gray-400">{item.model}</p></td>
+                                        <td className="px-4 py-2">{item.location}<p className="text-xs text-gray-400">{item.zone}</p></td>
+                                        <td className="px-4 py-2"><StatusBadge status={item.status} /></td>
+                                        <td className="px-4 py-2"><StatusBadge status={item.priority} /></td>
+                                        <td className="px-4 py-2">{item.battery}</td><td className="px-4 py-2">{item.signal}</td>
+                                        <td className="px-4 py-2">{item.nextMaintenance}</td><td className="px-4 py-2">{item.inspector}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                     <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
+                        <p>Showing 8 of 8 systems</p>
+                    </div>
+                 </Card>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {firefightingKpis.map(kpi => (
-                    <Card key={kpi.title} className="flex items-center gap-4">
-                        <kpi.icon className="w-8 h-8 text-gray-500" />
-                        <div>
-                            <p className="text-sm text-gray-500">{kpi.title}</p>
-                            <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi.value}</p>
-                            <p className="text-xs text-gray-400">{kpi.subValue}</p>
-                        </div>
-                    </Card>
-                ))}
+        );
+    } catch (error) {
+        console.error('FirefightingModule error:', error);
+        return (
+            <div className="p-8 text-center">
+                <h2 className="text-xl font-bold text-red-600 mb-4">Firefighting Module Error</h2>
+                <p className="text-gray-600">There was an error loading the firefighting module. Please check the console for details.</p>
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                    Reload Page
+                </button>
             </div>
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 <ModernDonutChart
-                    data={systemStatusData}
-                    config={{
-                        value: { label: 'Status Distribution', color: theme.colors.primary }
-                    }}
-                    title="System Status Distribution"
-                    height="h-[250px]"
-                    showLegend={true}
-                 />
-                 <ModernBarChart
-                    data={equipmentByTypeData}
-                    config={{
-                        count: { label: 'Equipment Count', color: theme.colors.primary }
-                    }}
-                    title="Equipment by Type"
-                    height="h-[250px]"
-                    showLegend={false}
-                 />
-             </div>
-             <Card>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                    <input type="text" placeholder="Search Equipment..." className="p-2 border rounded-md dark:bg-white/10 col-span-1 md:col-span-2" />
-                    <select className="p-2 border rounded-md dark:bg-white/10"><option>All Zones</option></select>
-                    <select className="p-2 border rounded-md dark:bg-white/10"><option>All System Types</option></select>
-                    <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors active:scale-95">Apply Filters</button>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
-                            <tr>{['Equipment', 'Location', 'Status', 'Priority', 'Battery', 'Signal', 'Next Maintenance', 'Inspector'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
-                        </thead>
-                        <tbody>
-                            {fireSafetyEquipmentData.map((item, idx) => (
-                                <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td className="px-4 py-2 font-medium">{item.equipment}<p className="text-xs text-gray-400">{item.model}</p></td>
-                                    <td className="px-4 py-2">{item.location}<p className="text-xs text-gray-400">{item.zone}</p></td>
-                                    <td className="px-4 py-2"><StatusBadge status={item.status} /></td>
-                                    <td className="px-4 py-2"><StatusBadge status={item.priority} /></td>
-                                    <td className="px-4 py-2">{item.battery}</td><td className="px-4 py-2">{item.signal}</td>
-                                    <td className="px-4 py-2">{item.nextMaintenance}</td><td className="px-4 py-2">{item.inspector}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                 <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-                    <p>Showing 8 of 8 systems</p>
-                </div>
-             </Card>
-        </div>
-    );
+        );
+    }
 };
 
 
