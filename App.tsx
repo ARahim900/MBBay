@@ -727,31 +727,13 @@ const Sidebar = () => {
             isSidebarCollapsed ? 'w-20' : 'w-64'
         }`}>
             {/* Mobile Close Button */}
-            <div className="md:hidden flex justify-end p-3 border-b border-white/10">
+            <div className="md:hidden flex justify-end p-3">
                 <button 
                     onClick={toggleSidebar}
                     className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white hover:text-[#A2D0C8]"
                     title="Close sidebar"
                 >
                     <X className="h-6 w-6" />
-                </button>
-            </div>
-            
-            {/* Desktop Collapse Toggle Button */}
-            <div className="hidden md:flex justify-end p-3 border-b border-white/10">
-                <button 
-                    onClick={toggleSidebarCollapse}
-                    className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group"
-                    title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                >
-                    {isSidebarCollapsed ? (
-                        <ChevronRight className="h-5 w-5 group-hover:text-[#A2D0C8]" />
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            <Menu className="h-5 w-5 group-hover:text-[#A2D0C8]" />
-                            <span className="text-sm text-white/80 group-hover:text-[#A2D0C8]">Collapse</span>
-                        </div>
-                    )}
                 </button>
             </div>
             
@@ -867,7 +849,7 @@ const Header = () => {
 };
 
 export default function App() {
-  const { activeModule, isDarkMode, isSidebarCollapsed } = useAppStore();
+  const { activeModule, isDarkMode, isSidebarCollapsed, toggleSidebarCollapse } = useAppStore();
   useEffect(() => { if (isDarkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } }, [isDarkMode]);
   const renderModule = () => {
     switch (activeModule) {
@@ -884,6 +866,23 @@ export default function App() {
     <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
       <Sidebar />
       <Header />
+      
+      {/* Collapse Toggle Button - Outside sidebar, below navbar */}
+      <button
+        onClick={toggleSidebarCollapse}
+        className={`hidden md:block fixed top-[73px] z-50 bg-[#4E4456] hover:bg-[#5A4F66] text-white p-2 shadow-lg transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? 'left-[20px]' : 'left-[256px]'
+        }`}
+        title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        style={{
+          borderRadius: '0 0 8px 0',
+          borderTop: 'none',
+          borderLeft: 'none'
+        }}
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </button>
+      
       {/* Main content area that adapts to sidebar width */}
       <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
         isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
