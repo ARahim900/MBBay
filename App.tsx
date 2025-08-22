@@ -721,32 +721,36 @@ const Sidebar = () => {
     ];
     
     return (
-        <aside className={`bg-[#4E4456] text-white fixed top-0 left-0 z-30 h-screen transition-all duration-300 ease-in-out ${
+        <aside className={`bg-[#4E4456] text-white fixed top-[73px] left-0 z-30 h-[calc(100vh-73px)] transition-all duration-300 ease-in-out border-r border-white/10 ${
             isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 ${
             isSidebarCollapsed ? 'w-20' : 'w-64'
         }`}>
-            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} p-6 border-b border-white/10 h-[73px]`}> 
-                <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-                    <img src="/MB-logo.png" alt="Muscat Bay Logo" className={`rounded-lg transition-all duration-300 ${isSidebarCollapsed ? 'w-8 h-8' : 'w-10 h-10'}`} />
-                    {!isSidebarCollapsed && <h1 className="text-xl font-bold">Muscat Bay</h1>}
-                </div>
-                <button onClick={toggleSidebar} className="md:hidden text-white"> 
-                    <X className="h-6 w-6" /> 
-                </button> 
+            {/* Mobile Close Button */}
+            <div className="md:hidden flex justify-end p-3 border-b border-white/10">
+                <button 
+                    onClick={toggleSidebar}
+                    className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-white hover:text-[#A2D0C8]"
+                    title="Close sidebar"
+                >
+                    <X className="h-6 w-6" />
+                </button>
             </div>
             
-            {/* Collapse Toggle Button - Desktop Only */}
-            <div className="hidden md:flex justify-end p-2 border-b border-white/10">
+            {/* Desktop Collapse Toggle Button */}
+            <div className="hidden md:flex justify-end p-3 border-b border-white/10">
                 <button 
                     onClick={toggleSidebarCollapse}
-                    className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200"
+                    className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group"
                     title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
                     {isSidebarCollapsed ? (
-                        <ChevronRight className="h-5 w-5" />
+                        <ChevronRight className="h-5 w-5 group-hover:text-[#A2D0C8]" />
                     ) : (
-                        <Menu className="h-5 w-5" />
+                        <div className="flex items-center gap-2">
+                            <Menu className="h-5 w-5 group-hover:text-[#A2D0C8]" />
+                            <span className="text-sm text-white/80 group-hover:text-[#A2D0C8]">Collapse</span>
+                        </div>
                     )}
                 </button>
             </div>
@@ -787,27 +791,75 @@ const Sidebar = () => {
     );
 };
 const Header = () => {
-    const { activeModule, toggleSidebar, isDarkMode, toggleDarkMode, isSidebarCollapsed } = useAppStore();
+    const { activeModule, toggleSidebar, isDarkMode, toggleDarkMode } = useAppStore();
     return (
-        <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-white/95 dark:bg-[#1A181F]/95 backdrop-blur-lg border-b border-[#E0E0E0] dark:border-white/10 h-[73px]">
-            <div className="flex items-center">
-                <button onClick={toggleSidebar} className="md:hidden mr-4 text-[#4E4456] dark:text-white"> 
+        <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-[#4E4456] shadow-lg h-[73px]">
+            {/* Left side with logo and app name */}
+            <div className="flex items-center gap-4">
+                <button onClick={toggleSidebar} className="md:hidden text-white hover:text-[#A2D0C8] transition-colors"> 
                     <Menu className="h-6 w-6" /> 
                 </button>
-                {/* Add padding based on sidebar state for desktop */}
-                <div className={`hidden md:block transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}></div>
-                <h2 className="text-lg font-semibold text-[#4E4456] dark:text-white ml-4">{activeModule}</h2>
+                
+                {/* Logo and App Name - Always visible */}
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <img 
+                            src="/MB-logo.png" 
+                            alt="Muscat Bay Logo" 
+                            className="w-12 h-12 rounded-xl shadow-md border-2 border-white/20 transition-transform duration-200 hover:scale-105" 
+                        />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#A2D0C8] rounded-full border-2 border-[#4E4456]"></div>
+                    </div>
+                    <div className="flex flex-col">
+                        <h1 className="text-xl font-bold text-white tracking-wide">Muscat Bay</h1>
+                        <p className="text-xs text-[#A2D0C8] font-medium">Utilities Management</p>
+                    </div>
+                </div>
+                
+                {/* Current Module Indicator */}
+                <div className="hidden md:flex items-center ml-8">
+                    <div className="h-6 w-px bg-white/20 mr-4"></div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#A2D0C8] rounded-full animate-pulse"></div>
+                        <h2 className="text-lg font-semibold text-white">{activeModule}</h2>
+                    </div>
+                </div>
             </div>
-            <div className="flex items-center space-x-4">
-                <button onClick={toggleDarkMode} className="text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> 
-                    {isDarkMode ? '☀️' : '🌙'} 
+            
+            {/* Right side controls */}
+            <div className="flex items-center space-x-3">
+                <button 
+                    onClick={toggleDarkMode} 
+                    className="p-2 text-white/80 hover:text-[#A2D0C8] hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                > 
+                    {isDarkMode ? (
+                        <div className="flex items-center gap-1">
+                            <span className="text-lg">☀️</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1">
+                            <span className="text-lg">🌙</span>
+                        </div>
+                    )}
                 </button>
-                <button className="relative text-[#9E9AA7] hover:text-[#4E4456] dark:hover:text-white transition-transform duration-200 hover:scale-110"> 
+                
+                <button 
+                    className="relative p-2 text-white/80 hover:text-[#A2D0C8] hover:bg-white/10 rounded-lg transition-all duration-200 hover:scale-110"
+                    title="Notifications"
+                > 
                     <Bell className="h-6 w-6" /> 
-                    <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span> 
+                    <span className="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-[#4E4456] animate-pulse"></span> 
                 </button>
-                <div className="h-9 w-9 bg-[#A2D0C8] rounded-full flex items-center justify-center text-[#4E4456] font-bold"> 
-                    <User className="h-5 w-5" /> 
+                
+                <div className="flex items-center gap-3 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
+                    <div className="h-9 w-9 bg-gradient-to-br from-[#A2D0C8] to-[#7FB8B3] rounded-full flex items-center justify-center text-[#4E4456] font-bold shadow-md"> 
+                        <User className="h-5 w-5" /> 
+                    </div>
+                    <div className="hidden md:flex flex-col">
+                        <span className="text-sm font-medium text-white">Admin</span>
+                        <span className="text-xs text-[#A2D0C8]">Manager</span>
+                    </div>
                 </div>
             </div>
         </header>
