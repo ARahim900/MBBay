@@ -9,6 +9,8 @@ import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
+import { ModernDonutChart, ModernBarChart } from './src/components/ui/ModernChart';
+import { Card } from './src/components/ui/Card';
 import { theme } from './src/lib/theme';
 
 
@@ -769,24 +771,27 @@ const Sidebar = () => {
                     })}
                 </ul>
                 
-                {/* Collapse Toggle Button - Bottom Right of Sidebar */}
-                <div className="hidden md:flex justify-end mt-4 pt-4 border-t border-white/10">
-                    <button 
-                        onClick={toggleSidebarCollapse}
-                        className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group text-gray-300 hover:text-[#A2D0C8]"
-                        title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    >
-                        {isSidebarCollapsed ? (
-                            <ChevronRight className="h-5 w-5" />
-                        ) : (
-                            <div className="flex items-center gap-1">
-                                <ChevronsRight className="h-4 w-4" />
-                                <ChevronRight className="h-4 w-4 -ml-2" />
-                            </div>
-                        )}
-                    </button>
-                </div>
             </nav>
+            
+            {/* Collapse Toggle Button - Fixed at bottom of viewport, within sidebar horizontal area */}
+            <button 
+                onClick={toggleSidebarCollapse}
+                className="hidden md:block fixed bottom-4 z-50 p-2 rounded-lg bg-[#2C3E50]/90 hover:bg-[#34495E]/90 backdrop-blur-sm text-gray-300 hover:text-[#A2D0C8] transition-all duration-200 border border-white/10 shadow-lg"
+                style={{
+                    right: isSidebarCollapsed ? '24px' : '24px', // 24px from right edge of sidebar (same as p-4 padding)
+                    left: 'auto' // Override any left positioning from className
+                }}
+                title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+                {isSidebarCollapsed ? (
+                    <ChevronRight className="h-5 w-5" />
+                ) : (
+                    <div className="flex items-center gap-1">
+                        <ChevronsRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 -ml-2" />
+                    </div>
+                )}
+            </button>
         </aside>
     );
 };
