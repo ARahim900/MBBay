@@ -737,8 +737,8 @@ const Sidebar = () => {
                 </button>
             </div>
             
-            <nav className="p-4">
-                <ul>
+            <nav className="p-4 flex-1 flex flex-col">
+                <ul className="flex-1">
                     {navItems.map(({ name, icon: Icon }) => {
                         const isActive = activeModule === name;
                         return (
@@ -768,6 +768,24 @@ const Sidebar = () => {
                         );
                     })}
                 </ul>
+                
+                {/* Collapse Toggle Button - Bottom Right of Sidebar */}
+                <div className="hidden md:flex justify-end mt-4 pt-4 border-t border-white/10">
+                    <button 
+                        onClick={toggleSidebarCollapse}
+                        className="p-2 rounded-lg hover:bg-white/10 transition-all duration-200 group text-gray-300 hover:text-[#A2D0C8]"
+                        title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {isSidebarCollapsed ? (
+                            <ChevronRight className="h-5 w-5" />
+                        ) : (
+                            <div className="flex items-center gap-1">
+                                <ChevronsRight className="h-4 w-4" />
+                                <ChevronRight className="h-4 w-4 -ml-2" />
+                            </div>
+                        )}
+                    </button>
+                </div>
             </nav>
         </aside>
     );
@@ -867,21 +885,6 @@ export default function App() {
       <Sidebar />
       <Header />
       
-      {/* Collapse Toggle Button - Outside sidebar, below navbar */}
-      <button
-        onClick={toggleSidebarCollapse}
-        className={`hidden md:block fixed top-[73px] z-50 bg-[#4E4456] hover:bg-[#5A4F66] text-white p-2 shadow-lg transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'left-[20px]' : 'left-[256px]'
-        }`}
-        title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        style={{
-          borderRadius: '0 0 8px 0',
-          borderTop: 'none',
-          borderLeft: 'none'
-        }}
-      >
-        <LayoutGrid className="h-4 w-4" />
-      </button>
       
       {/* Main content area that adapts to sidebar width */}
       <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
