@@ -9,8 +9,6 @@ import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
-import { ModernDonutChart, ModernBarChart } from './src/components/ui/ModernChart';
-import { Card } from './src/components/ui/Card';
 import { theme } from './src/lib/theme';
 
 
@@ -42,7 +40,7 @@ import {
   Card, 
   KpiCard, 
   Button, 
-  Sidebar,
+  Sidebar as UISidebar,
   ModernAreaChart as UIModernAreaChart,
   ModernBarChart,
   ModernDonutChart,
@@ -526,6 +524,8 @@ const fireSafetyEquipmentData = [
 const FirefightingModule = () => {
     try {
         const StatusBadge = ({ status }: { status: string }) => {
+            if (!status) return null;
+            
             const colors: { [key: string]: string } = {
                 Operational: 'bg-green-100 text-green-800', 
                 Critical: 'bg-red-100 text-red-800',
@@ -535,25 +535,27 @@ const FirefightingModule = () => {
                 High: 'bg-orange-100 text-orange-800', 
                 Medium: 'bg-yellow-100 text-yellow-800',
             };
-            return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100'}`}>{status}</span>;
+            return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100 text-gray-800'}`}>{status}</span>;
         };
         
         return (
             <div className="space-y-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6">
                      <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System Management</h2>
-                     <p className="text-sm text-gray-500">Monitor and maintain fire safety equipment across all zones</p>
+                     <p className="text-sm text-gray-500 mt-1">Monitor and maintain fire safety equipment across all zones</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {firefightingKpis.map((kpi, index) => {
-                        const IconComponent = kpi.icon;
+                    {firefightingKpis && firefightingKpis.map((kpi, index) => {
+                        const IconComponent = kpi?.icon;
+                        if (!IconComponent) return null;
+                        
                         return (
-                            <Card key={kpi.title || index} className="flex items-center gap-4">
+                            <Card key={kpi?.title || index} className="flex items-center gap-4">
                                 <IconComponent className="w-8 h-8 text-gray-500" />
                                 <div>
-                                    <p className="text-sm text-gray-500">{kpi.title}</p>
-                                    <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi.value}</p>
-                                    <p className="text-xs text-gray-400">{kpi.subValue}</p>
+                                    <p className="text-sm text-gray-500">{kpi?.title || ''}</p>
+                                    <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi?.value || ''}</p>
+                                    <p className="text-xs text-gray-400">{kpi?.subValue || ''}</p>
                                 </div>
                             </Card>
                         );
@@ -561,18 +563,18 @@ const FirefightingModule = () => {
                 </div>
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                      <ModernDonutChart
-                        data={systemStatusData}
+                        data={systemStatusData || []}
                         config={{
-                            value: { label: 'Status Distribution', color: theme.colors.primary }
+                            value: { label: 'Status Distribution', color: theme?.colors?.primary || '#3B82F6' }
                         }}
                         title="System Status Distribution"
                         height="h-[250px]"
                         showLegend={true}
                      />
                      <ModernBarChart
-                        data={equipmentByTypeData}
+                        data={equipmentByTypeData || []}
                         config={{
-                            count: { label: 'Equipment Count', color: theme.colors.primary }
+                            count: { label: 'Equipment Count', color: theme?.colors?.primary || '#3B82F6' }
                         }}
                         title="Equipment by Type"
                         height="h-[250px]"
@@ -592,14 +594,14 @@ const FirefightingModule = () => {
                                 <tr>{['Equipment', 'Location', 'Status', 'Priority', 'Battery', 'Signal', 'Next Maintenance', 'Inspector'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
                             </thead>
                             <tbody>
-                                {fireSafetyEquipmentData.map((item, idx) => (
+                                {fireSafetyEquipmentData && fireSafetyEquipmentData.map((item, idx) => (
                                     <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <td className="px-4 py-2 font-medium">{item.equipment}<p className="text-xs text-gray-400">{item.model}</p></td>
-                                        <td className="px-4 py-2">{item.location}<p className="text-xs text-gray-400">{item.zone}</p></td>
-                                        <td className="px-4 py-2"><StatusBadge status={item.status} /></td>
-                                        <td className="px-4 py-2"><StatusBadge status={item.priority} /></td>
-                                        <td className="px-4 py-2">{item.battery}</td><td className="px-4 py-2">{item.signal}</td>
-                                        <td className="px-4 py-2">{item.nextMaintenance}</td><td className="px-4 py-2">{item.inspector}</td>
+                                        <td className="px-4 py-2 font-medium">{item?.equipment || ''}<p className="text-xs text-gray-400">{item?.model || ''}</p></td>
+                                        <td className="px-4 py-2">{item?.location || ''}<p className="text-xs text-gray-400">{item?.zone || ''}</p></td>
+                                        <td className="px-4 py-2"><StatusBadge status={item?.status || ''} /></td>
+                                        <td className="px-4 py-2"><StatusBadge status={item?.priority || ''} /></td>
+                                        <td className="px-4 py-2">{item?.battery || ''}</td><td className="px-4 py-2">{item?.signal || ''}</td>
+                                        <td className="px-4 py-2">{item?.nextMaintenance || ''}</td><td className="px-4 py-2">{item?.inspector || ''}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -821,7 +823,7 @@ const Sidebar = () => {
 const Header = () => {
     const { activeModule, toggleSidebar, isDarkMode, toggleDarkMode } = useAppStore();
     return (
-        <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-[#4E4456] shadow-lg h-[73px]">
+        <header className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 bg-[#4E4456] shadow-[0_4px_20px_rgba(0,0,0,0.25),0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4),0_12px_40px_rgba(0,0,0,0.3)] h-[73px]">
             {/* Left side with logo and app name */}
             <div className="flex items-center gap-4">
                 <button onClick={toggleSidebar} className="md:hidden text-white hover:text-[#A2D0C8] transition-colors"> 
