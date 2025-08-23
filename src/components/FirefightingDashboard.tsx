@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, AlertTriangle, CheckCircle, XCircle, TrendingUp, Calendar, MapPin, Settings, RefreshCw, Bell, Download, LayoutDashboard } from 'lucide-react';
-import { Card, KpiCard, Button } from './ui';
+import { Flame, AlertTriangle, CheckCircle, XCircle, TrendingUp, Calendar, MapPin, Settings, RefreshCw, Bell, Download, LayoutDashboard, Database, PieChart } from 'lucide-react';
+import { MenuBar } from './ui/glow-menu';
 import { FirefightingAPI } from '../lib/firefighting-api';
 import type { FirefightingDashboardStats, PPMFinding, Equipment, FirefightingAlert } from '../types/firefighting';
 import { SystemHealthIndicator } from './firefighting/SystemHealthIndicator';
@@ -11,8 +11,48 @@ import { MetricCard } from './firefighting/MetricCard';
 import { EquipmentManagement } from './firefighting/EquipmentManagement';
 import { PPMManagement } from './firefighting/PPMManagement';
 
+// Card Component matching the existing design
+const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+// Button Component matching the existing design
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', ...props }: any) => {
+  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200';
+  const variants = {
+    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
+    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
+  };
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm',
+    default: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
 export const FirefightingDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'equipment' | 'ppm' | 'findings' | 'reports'>('dashboard');
+  const [activeSubModule, setActiveSubModule] = useState('Dashboard');
   const [stats, setStats] = useState<FirefightingDashboardStats>({
     totalEquipment: 0,
     activeEquipment: 0,
@@ -151,18 +191,65 @@ export const FirefightingDashboard: React.FC = () => {
     );
   }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
+  // Menu items matching the existing pattern
+  const menuItems = [
+    { 
+      icon: LayoutDashboard, 
+      label: 'Dashboard', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(220,38,38,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(220,38,38,0) 100%)",
+      iconColor: "text-red-500"
+    },
+    { 
+      icon: Settings, 
+      label: 'Equipment', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.06) 50%, rgba(59,130,246,0) 100%)",
+      iconColor: "text-blue-500"
+    },
+    { 
+      icon: Calendar, 
+      label: 'PPM Management', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.06) 50%, rgba(34,197,94,0) 100%)",
+      iconColor: "text-green-500"
+    },
+    { 
+      icon: AlertTriangle, 
+      label: 'Findings', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.06) 50%, rgba(245,158,11,0) 100%)",
+      iconColor: "text-amber-500"
+    },
+    { 
+      icon: PieChart, 
+      label: 'Reports', 
+      href: '#',
+      gradient: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.06) 50%, rgba(139,92,246,0) 100%)",
+      iconColor: "text-purple-500"
+    },
+  ];
+
+  const renderSubModule = () => {
+    switch (activeSubModule) {
+      case 'Dashboard':
         return renderDashboard();
-      case 'equipment':
+      case 'Equipment':
         return <EquipmentManagement />;
-      case 'ppm':
+      case 'PPM Management':
         return <PPMManagement />;
-      case 'findings':
-        return <FindingsTable findings={findings} showPagination={true} />;
-      case 'reports':
-        return <div>Reports module coming soon...</div>;
+      case 'Findings':
+        return <FindingsTable findings={findings} showPagination={true} compact={false} />;
+      case 'Reports':
+        return (
+          <Card>
+            <div className="text-center p-8">
+              <PieChart className="h-16 w-16 text-purple-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Reports Module</h3>
+              <p className="text-gray-600 dark:text-gray-300">Advanced reporting and analytics coming soon...</p>
+            </div>
+          </Card>
+        );
       default:
         return renderDashboard();
     }
@@ -254,7 +341,7 @@ export const FirefightingDashboard: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setActiveTab('findings')}
+              onClick={() => setActiveSubModule('Findings')}
             >
               View All
             </Button>
@@ -312,66 +399,22 @@ export const FirefightingDashboard: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-[#4E4456] dark:text-white flex items-center gap-3">
-            <div className="p-2 bg-red-500/20 rounded-lg">
-              <Flame className="h-8 w-8 text-red-500" />
-            </div>
-            Firefighting & Alarm System
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Comprehensive safety monitoring and maintenance management
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            onClick={handleRefresh}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-          <Button 
-            onClick={handleExportReport}
-            className="bg-red-500 hover:bg-red-600 flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export Report
-          </Button>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System</h2>
+        <p className="text-sm text-gray-500">Muscat Bay Safety Management</p>
       </div>
-
-      <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-4 rounded-lg">
-        {[
-          { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { id: 'equipment', label: 'Equipment', icon: Settings },
-          { id: 'ppm', label: 'PPM', icon: Calendar },
-          { id: 'findings', label: 'Findings', icon: AlertTriangle },
-          { id: 'reports', label: 'Reports', icon: Download }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
-        })}
+      
+      <div className="mb-6 flex justify-center">
+        <MenuBar
+          items={menuItems}
+          activeItem={activeSubModule}
+          onItemClick={(label) => setActiveSubModule(label)}
+          className="w-fit"
+        />
       </div>
-
-      {renderContent()}
+      
+      {renderSubModule()}
     </div>
   );
 };

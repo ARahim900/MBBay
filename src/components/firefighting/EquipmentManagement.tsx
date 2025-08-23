@@ -1,10 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, MapPin, Calendar, AlertTriangle, CheckCircle, Clock, QrCode } from 'lucide-react';
-import { Card, Button } from '../ui';
 import { FirefightingAPI } from '../../lib/firefighting-api';
 import type { Equipment, EquipmentType, PPMLocation } from '../../types/firefighting';
 import { EquipmentModal } from './EquipmentModal';
 import { QRCodeModal } from './QRCodeModal';
+
+// Card Component matching the existing design
+const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+// Button Component matching the existing design
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
+  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+  const variants = {
+    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
+    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
+  };
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm',
+    default: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 export const EquipmentManagement: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -168,12 +208,8 @@ export const EquipmentManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Equipment Management</h2>
-          <p className="text-gray-600 dark:text-gray-300">Manage firefighting and alarm system equipment</p>
-        </div>
-        <Button onClick={handleAdd} className="bg-red-500 hover:bg-red-600 flex items-center gap-2">
+      <div className="flex justify-end">
+        <Button onClick={handleAdd} variant="danger" className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Equipment
         </Button>

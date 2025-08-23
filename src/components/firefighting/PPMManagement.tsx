@@ -1,11 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, Clock, CheckCircle, XCircle, Filter, Search, FileText, Camera, AlertTriangle } from 'lucide-react';
-import { Card, Button } from '../ui';
 import { FirefightingAPI } from '../../lib/firefighting-api';
 import type { PPMRecord, PPMFinding, PPMLocation } from '../../types/firefighting';
 import { PPMScheduleView } from './PPMScheduleView';
 import { InspectionFormModal } from './InspectionFormModal';
 import { FindingFormModal } from './FindingFormModal';
+
+// Card Component matching the existing design
+const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+// Button Component matching the existing design
+const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
+  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
+  const variants = {
+    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
+    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
+  };
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm',
+    default: 'px-4 py-2',
+    lg: 'px-6 py-3 text-lg'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 interface PPMManagementProps {}
 
@@ -152,13 +192,9 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">PPM Management</h2>
-          <p className="text-gray-600 dark:text-gray-300">Planned Preventive Maintenance scheduling and tracking</p>
-        </div>
+      <div className="flex justify-end">
         <div className="flex items-center gap-2">
-          <Button onClick={handleNewInspection} className="bg-red-500 hover:bg-red-600">
+          <Button onClick={handleNewInspection} variant="danger">
             <Plus className="h-4 w-4 mr-2" />
             New Inspection
           </Button>
@@ -169,54 +205,54 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setView('schedule')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              view === 'schedule'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-            }`}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule
-          </button>
-          <button
-            onClick={() => setView('records')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              view === 'records'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-            }`}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Records
-          </button>
-          <button
-            onClick={() => setView('findings')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              view === 'findings'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-            }`}
-          >
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Findings
-          </button>
+      <Card>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView('schedule')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                view === 'schedule'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <Calendar className="h-4 w-4" />
+              Schedule
+            </button>
+            <button
+              onClick={() => setView('records')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                view === 'records'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              Records
+            </button>
+            <button
+              onClick={() => setView('findings')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                view === 'findings'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+              }`}
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Findings
+            </button>
+          </div>
         </div>
-      </div>
 
-      {view === 'schedule' && (
-        <PPMScheduleView
-          locations={locations}
-          onNewInspection={handleNewInspection}
-          onEditRecord={handleEditRecord}
-        />
-      )}
+        {view === 'schedule' && (
+          <PPMScheduleView
+            locations={locations}
+            onNewInspection={handleNewInspection}
+            onEditRecord={handleEditRecord}
+          />
+        )}
 
-      {view === 'records' && (
-        <Card>
+        {view === 'records' && (
           <div className="p-6">
             <div className="flex flex-wrap gap-4 items-center mb-6">
               <div className="flex items-center gap-2 flex-1 min-w-64">
@@ -354,11 +390,9 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
               </div>
             )}
           </div>
-        </Card>
-      )}
+        )}
 
-      {view === 'findings' && (
-        <Card>
+        {view === 'findings' && (
           <div className="p-6">
             <div className="space-y-4">
               {findings.map((finding) => (
@@ -424,8 +458,8 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
               </div>
             )}
           </div>
-        </Card>
-      )}
+        )}
+      </Card>
 
       <InspectionFormModal
         isOpen={showInspectionModal}
