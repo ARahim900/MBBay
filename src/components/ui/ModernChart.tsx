@@ -256,7 +256,7 @@ export const ModernAreaChart: React.FC<ModernAreaChartProps> = ({
             </defs>
             {showGrid && <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />}
             <XAxis
-              dataKey="month"
+              dataKey="name"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
@@ -376,7 +376,7 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
                 opacity={theme.charts.grid.opacity} 
               />}
               <XAxis
-                dataKey="month"
+                dataKey="name"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -486,7 +486,7 @@ export const ModernLineChart: React.FC<ModernLineChartProps> = ({
           <LineChart data={data}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />}
             <XAxis
-              dataKey="month"
+              dataKey="name"
               tickLine={false}
               axisLine={false}
               tickMargin={8}

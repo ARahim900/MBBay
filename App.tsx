@@ -503,8 +503,10 @@ const firefightingKpis = [
     { title: "MAINTENANCE DUE", value: "1 systems", subValue: "Scheduled maintenance needed", icon: HardHat },
 ];
 const systemStatusData = [
-    { name: 'Operational', value: 5, color: theme.colors.extended.green }, { name: 'Needs Attention', value: 1, color: theme.colors.accent },
-    { name: 'Critical', value: 1, color: theme.colors.secondary }, { name: 'Maintenance Due', value: 1, color: theme.colors.primary },
+    { name: 'Operational', value: 5 }, 
+    { name: 'Needs Attention', value: 1 },
+    { name: 'Critical', value: 1 }, 
+    { name: 'Maintenance Due', value: 1 },
 ];
 const equipmentByTypeData = [
     { name: 'Control Panel', count: 2 }, { name: 'Smoke Detector', count: 1 }, { name: 'Extinguisher', count: 1 },
@@ -565,7 +567,10 @@ const FirefightingModule = () => {
                      <ModernDonutChart
                         data={systemStatusData || []}
                         config={{
-                            value: { label: 'Status Distribution', color: theme?.colors?.primary || '#3B82F6' }
+                            Operational: { label: 'Operational', color: theme?.colors?.extended?.green || '#22c55e' },
+                            'Needs Attention': { label: 'Needs Attention', color: theme?.colors?.accent || '#F7C604' },
+                            Critical: { label: 'Critical', color: theme?.colors?.secondary || '#FF5B5B' },
+                            'Maintenance Due': { label: 'Maintenance Due', color: theme?.colors?.primary || '#2D9CDB' }
                         }}
                         title="System Status Distribution"
                         height="h-[250px]"
