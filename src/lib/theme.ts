@@ -183,3 +183,24 @@ export const getColorValue = (colorPath: string) => {
 export const createGradient = (color1: string, color2: string, direction = '135deg') => {
   return `linear-gradient(${direction}, ${color1} 0%, ${color2} 100%)`;
 };
+
+// Theme fallback utility for safe theme value access
+export const getThemeValue = (path: string, fallback: string) => {
+  try {
+    const keys = path.split('.');
+    let value: any = theme;
+    
+    for (const key of keys) {
+      value = value[key];
+      if (value === undefined || value === null) {
+        console.warn(`Theme value not found: ${path}, using fallback: ${fallback}`);
+        return fallback;
+      }
+    }
+    
+    return value;
+  } catch (error) {
+    console.warn(`Error accessing theme value: ${path}, using fallback: ${fallback}`);
+    return fallback;
+  }
+};

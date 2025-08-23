@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, AlertTriangle, Camera, DollarSign } from 'lucide-react';
 import { Button } from '../ui/Button';
 import type { PPMRecord, PPMFinding } from '../../types/firefighting';
+import { theme, getThemeValue } from '../../lib/theme';
 
 interface FindingFormModalProps {
   isOpen: boolean;
@@ -105,11 +106,31 @@ export const FindingFormModal: React.FC<FindingFormModalProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'Critical': return 'text-red-600 bg-red-50 border-red-200';
-      case 'High': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'Medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'Low': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'Critical': return {
+        color: theme.colors.status.error,
+        backgroundColor: `${theme.colors.status.error}08`,
+        borderColor: `${theme.colors.status.error}33`
+      };
+      case 'High': return {
+        color: theme.colors.status.warning,
+        backgroundColor: `${theme.colors.status.warning}08`,
+        borderColor: `${theme.colors.status.warning}33`
+      };
+      case 'Medium': return {
+        color: theme.colors.extended.orange,
+        backgroundColor: `${theme.colors.extended.orange}08`,
+        borderColor: `${theme.colors.extended.orange}33`
+      };
+      case 'Low': return {
+        color: theme.colors.status.info,
+        backgroundColor: `${theme.colors.status.info}08`,
+        borderColor: `${theme.colors.status.info}33`
+      };
+      default: return {
+        color: theme.colors.gray[600],
+        backgroundColor: theme.colors.gray[50],
+        borderColor: theme.colors.gray[200]
+      };
     }
   };
 
@@ -119,8 +140,16 @@ export const FindingFormModal: React.FC<FindingFormModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-[#4E4456] dark:text-white flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
+          <h2 
+            className="flex items-center gap-2 dark:text-white"
+            style={{ 
+              fontSize: theme.typography.fontSize.xl,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}
+          >
+            <AlertTriangle className="h-5 w-5" style={{ color: theme.colors.status.error }} />
             Report Finding
           </h2>
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -152,7 +181,14 @@ export const FindingFormModal: React.FC<FindingFormModalProps> = ({
                 name="severity"
                 value={formData.severity}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white ${getSeverityColor(formData.severity)}`}
+                className="w-full border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                style={{
+                  ...getSeverityColor(formData.severity),
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.labelSize,
+                  fontFamily: theme.typography.fontFamily
+                }}
               >
                 <option value="Low">Low - Minor issue, routine maintenance</option>
                 <option value="Medium">Medium - Needs attention, plan repair</option>

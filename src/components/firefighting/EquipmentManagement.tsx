@@ -4,47 +4,8 @@ import { FirefightingAPI } from '../../lib/firefighting-api';
 import type { Equipment, EquipmentType, PPMLocation } from '../../types/firefighting';
 import { EquipmentModal } from './EquipmentModal';
 import { QRCodeModal } from './QRCodeModal';
-
-// Card Component matching the existing design
-const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-// Button Component matching the existing design
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-  const variants = {
-    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
-  };
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+import { Card, Button } from '../ui';
+import { theme, getThemeValue } from '../../lib/theme';
 
 export const EquipmentManagement: React.FC = () => {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -177,21 +138,41 @@ export const EquipmentManagement: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Active': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'Faulty': return <AlertTriangle className="h-4 w-4 text-red-500" />;
-      case 'Under Maintenance': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'Inactive': return <AlertTriangle className="h-4 w-4 text-gray-500" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+      case 'Active': return <CheckCircle className="h-4 w-4" style={{ color: theme.colors.status.success }} />;
+      case 'Faulty': return <AlertTriangle className="h-4 w-4" style={{ color: theme.colors.status.error }} />;
+      case 'Under Maintenance': return <Clock className="h-4 w-4" style={{ color: theme.colors.status.warning }} />;
+      case 'Inactive': return <AlertTriangle className="h-4 w-4" style={{ color: theme.colors.gray[500] }} />;
+      default: return <AlertTriangle className="h-4 w-4" style={{ color: theme.colors.gray[500] }} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Faulty': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Under Maintenance': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Inactive': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Active': return {
+        backgroundColor: `${theme.colors.status.success}15`,
+        color: theme.colors.status.success,
+        borderColor: `${theme.colors.status.success}33`
+      };
+      case 'Faulty': return {
+        backgroundColor: `${theme.colors.status.error}15`,
+        color: theme.colors.status.error,
+        borderColor: `${theme.colors.status.error}33`
+      };
+      case 'Under Maintenance': return {
+        backgroundColor: `${theme.colors.status.warning}15`,
+        color: theme.colors.status.warning,
+        borderColor: `${theme.colors.status.warning}33`
+      };
+      case 'Inactive': return {
+        backgroundColor: `${theme.colors.gray[500]}15`,
+        color: theme.colors.gray[500],
+        borderColor: `${theme.colors.gray[500]}33`
+      };
+      default: return {
+        backgroundColor: `${theme.colors.gray[500]}15`,
+        color: theme.colors.gray[500],
+        borderColor: `${theme.colors.gray[500]}33`
+      };
     }
   };
 
@@ -199,8 +180,8 @@ export const EquipmentManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading equipment...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderBottomColor: theme.colors.status.error }}></div>
+          <p className="mt-4" style={{ color: theme.colors.textSecondary, fontSize: theme.typography.labelSize, fontFamily: theme.typography.fontFamily }}>Loading equipment...</p>
         </div>
       </div>
     );
@@ -226,6 +207,12 @@ export const EquipmentManagement: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                style={{
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.labelSize,
+                  fontFamily: theme.typography.fontFamily,
+                  padding: theme.spacing.sm
+                }}
               />
             </div>
             
@@ -273,10 +260,19 @@ export const EquipmentManagement: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEquipment.map((item) => (
-              <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <Card key={item.id} padding="md" hover={true}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(item.status)}`}>
+                    <span 
+                      className="px-2 py-1 text-xs rounded-full border"
+                      style={{
+                        ...getStatusColor(item.status),
+                        fontSize: theme.typography.tooltipSize,
+                        fontFamily: theme.typography.fontFamily,
+                        fontWeight: theme.typography.fontWeight.medium,
+                        borderRadius: theme.borderRadius.full
+                      }}
+                    >
                       {item.status}
                     </span>
                   </div>
@@ -285,7 +281,6 @@ export const EquipmentManagement: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleShowQR(item)}
-                      title="Show QR Code"
                     >
                       <QrCode className="h-4 w-4" />
                     </Button>
@@ -307,12 +302,27 @@ export const EquipmentManagement: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
                   <div>
-                    <h3 className="font-semibold text-[#4E4456] dark:text-white">
+                    <h3 
+                      style={{ 
+                        fontSize: theme.typography.titleSize,
+                        fontWeight: theme.typography.fontWeight.semibold,
+                        color: theme.colors.textPrimary,
+                        fontFamily: theme.typography.fontFamily
+                      }}
+                      className="dark:text-white"
+                    >
                       {item.equipment_name}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p 
+                      style={{ 
+                        fontSize: theme.typography.labelSize,
+                        color: theme.colors.textSecondary,
+                        fontFamily: theme.typography.fontFamily
+                      }}
+                      className="dark:text-gray-300"
+                    >
                       Code: {item.equipment_code}
                     </p>
                   </div>
@@ -347,15 +357,15 @@ export const EquipmentManagement: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
           {filteredEquipment.length === 0 && (
             <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-300">No equipment found</p>
-              <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+              <AlertTriangle className="h-12 w-12 mx-auto mb-4" style={{ color: theme.colors.gray[400] }} />
+              <p style={{ color: theme.colors.textSecondary, fontSize: theme.typography.labelSize, fontFamily: theme.typography.fontFamily }} className="dark:text-gray-300">No equipment found</p>
+              <p style={{ color: theme.colors.gray[500], fontSize: theme.typography.tooltipSize, fontFamily: theme.typography.fontFamily }}>Try adjusting your search or filters</p>
             </div>
           )}
         </div>

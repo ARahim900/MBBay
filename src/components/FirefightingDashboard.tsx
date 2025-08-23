@@ -1,55 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, AlertTriangle, CheckCircle, XCircle, TrendingUp, Calendar, MapPin, Settings, RefreshCw, Bell, Download, LayoutDashboard, Database, PieChart } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, TrendingUp, Calendar, MapPin, Settings, RefreshCw, Bell, Download, LayoutDashboard, PieChart } from 'lucide-react';
 import { MenuBar } from './ui/glow-menu';
+import { Card, KpiCard, Button } from './ui';
 import { FirefightingAPI } from '../lib/firefighting-api';
 import type { FirefightingDashboardStats, PPMFinding, Equipment, FirefightingAlert } from '../types/firefighting';
+import { getThemeValue } from '../lib/theme';
 import { SystemHealthIndicator } from './firefighting/SystemHealthIndicator';
 import { BuildingHeatMap } from './firefighting/BuildingHeatMap';
 import { FindingsTable } from './firefighting/FindingsTable';
 import { UpcomingPPMCalendar } from './firefighting/UpcomingPPMCalendar';
-import { MetricCard } from './firefighting/MetricCard';
 import { EquipmentManagement } from './firefighting/EquipmentManagement';
 import { PPMManagement } from './firefighting/PPMManagement';
-
-// Card Component matching the existing design
-const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-// Button Component matching the existing design
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', ...props }: any) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200';
-  const variants = {
-    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
-  };
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
 
 export const FirefightingDashboard: React.FC = () => {
   const [activeSubModule, setActiveSubModule] = useState('Dashboard');
@@ -164,10 +125,19 @@ export const FirefightingDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#1A181F] flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-[400px] p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading firefighting system data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderBottomColor: getThemeValue('colors.status.error', '#ef4444') }}></div>
+          <p 
+            className="mt-4 dark:text-gray-300"
+            style={{ 
+              color: getThemeValue('colors.textSecondary', '#6B7280'),
+              fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            Loading firefighting system data...
+          </p>
         </div>
       </div>
     );
@@ -175,13 +145,31 @@ export const FirefightingDashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[#1A181F] flex items-center justify-center">
-        <Card className="max-w-md">
-          <div className="text-center text-red-600">
+      <div className="flex items-center justify-center min-h-[400px] p-4">
+        <Card className="max-w-md w-full">
+          <div className="text-center" style={{ color: getThemeValue('colors.status.error', '#ef4444') }}>
             <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Error Loading Dashboard</h3>
-            <p className="text-sm text-gray-600 mb-4">{error}</p>
-            <Button onClick={handleRefresh} className="bg-red-500 hover:bg-red-600">
+            <h3 
+              className="mb-2"
+              style={{ 
+                fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Error Loading Dashboard
+            </h3>
+            <p 
+              className="mb-4"
+              style={{ 
+                fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                color: getThemeValue('colors.textSecondary', '#6B7280'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              {error}
+            </p>
+            <Button onClick={handleRefresh} variant="primary" className="w-full sm:w-auto">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -191,42 +179,42 @@ export const FirefightingDashboard: React.FC = () => {
     );
   }
 
-  // Menu items matching the existing pattern
+  // Menu items matching the existing pattern with proper theme integration
   const menuItems = [
     { 
       icon: LayoutDashboard, 
       label: 'Dashboard', 
       href: '#',
-      gradient: "radial-gradient(circle, rgba(220,38,38,0.15) 0%, rgba(220,38,38,0.06) 50%, rgba(220,38,38,0) 100%)",
-      iconColor: "text-red-500"
+      gradient: `radial-gradient(circle, ${getThemeValue('colors.status.error', '#ef4444')}15 0%, ${getThemeValue('colors.status.error', '#ef4444')}06 50%, ${getThemeValue('colors.status.error', '#ef4444')}00 100%)`,
+      iconColor: `text-[${getThemeValue('colors.status.error', '#ef4444')}]`
     },
     { 
       icon: Settings, 
       label: 'Equipment', 
       href: '#',
-      gradient: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.06) 50%, rgba(59,130,246,0) 100%)",
-      iconColor: "text-blue-500"
+      gradient: `radial-gradient(circle, ${getThemeValue('colors.status.info', '#3b82f6')}15 0%, ${getThemeValue('colors.status.info', '#3b82f6')}06 50%, ${getThemeValue('colors.status.info', '#3b82f6')}00 100%)`,
+      iconColor: `text-[${getThemeValue('colors.status.info', '#3b82f6')}]`
     },
     { 
       icon: Calendar, 
       label: 'PPM Management', 
       href: '#',
-      gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, rgba(34,197,94,0.06) 50%, rgba(34,197,94,0) 100%)",
-      iconColor: "text-green-500"
+      gradient: `radial-gradient(circle, ${getThemeValue('colors.status.success', '#10b981')}15 0%, ${getThemeValue('colors.status.success', '#10b981')}06 50%, ${getThemeValue('colors.status.success', '#10b981')}00 100%)`,
+      iconColor: `text-[${getThemeValue('colors.status.success', '#10b981')}]`
     },
     { 
       icon: AlertTriangle, 
       label: 'Findings', 
       href: '#',
-      gradient: "radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.06) 50%, rgba(245,158,11,0) 100%)",
-      iconColor: "text-amber-500"
+      gradient: `radial-gradient(circle, ${getThemeValue('colors.status.warning', '#f59e0b')}15 0%, ${getThemeValue('colors.status.warning', '#f59e0b')}06 50%, ${getThemeValue('colors.status.warning', '#f59e0b')}00 100%)`,
+      iconColor: `text-[${getThemeValue('colors.status.warning', '#f59e0b')}]`
     },
     { 
       icon: PieChart, 
       label: 'Reports', 
       href: '#',
-      gradient: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(139,92,246,0.06) 50%, rgba(139,92,246,0) 100%)",
-      iconColor: "text-purple-500"
+      gradient: `radial-gradient(circle, ${getThemeValue('colors.extended.purple', '#8b5cf6')}15 0%, ${getThemeValue('colors.extended.purple', '#8b5cf6')}06 50%, ${getThemeValue('colors.extended.purple', '#8b5cf6')}00 100%)`,
+      iconColor: `text-[${getThemeValue('colors.extended.purple', '#8b5cf6')}]`
     },
   ];
 
@@ -243,10 +231,29 @@ export const FirefightingDashboard: React.FC = () => {
       case 'Reports':
         return (
           <Card>
-            <div className="text-center p-8">
-              <PieChart className="h-16 w-16 text-purple-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Reports Module</h3>
-              <p className="text-gray-600 dark:text-gray-300">Advanced reporting and analytics coming soon...</p>
+            <div className="text-center p-6 md:p-8">
+              <PieChart className="h-12 w-12 md:h-16 md:w-16 text-purple-500 mx-auto mb-4" />
+              <h3 
+                className="mb-2 dark:text-white"
+                style={{ 
+                  fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                  fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                  color: getThemeValue('colors.textPrimary', '#111827'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                Reports Module
+              </h3>
+              <p 
+                className="dark:text-gray-300"
+                style={{ 
+                  fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                  color: getThemeValue('colors.textSecondary', '#6B7280'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                Advanced reporting and analytics coming soon...
+              </p>
             </div>
           </Card>
         );
@@ -256,156 +263,277 @@ export const FirefightingDashboard: React.FC = () => {
   };
 
   const renderDashboard = () => (
-    <>
+    <div className="space-y-6">
+      {/* System Health Overview - Aligned with enhanced module patterns */}
       <Card>
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-4">
-            <SystemHealthIndicator score={stats.complianceRate} />
-            <div>
-              <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white">System Health Status</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Overall compliance: {stats.complianceRate.toFixed(1)}%
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 md:gap-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
+            <div className="flex-shrink-0">
+              <SystemHealthIndicator score={stats.complianceRate} />
+            </div>
+            <div className="space-y-1">
+              <h3 
+                className="dark:text-white"
+                style={{ 
+                  fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                  fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                  color: getThemeValue('colors.textPrimary', '#111827'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                System Health Status
+              </h3>
+              <p 
+                style={{ 
+                  fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                  color: getThemeValue('colors.gray.500', '#6b7280'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                Overall compliance: <span 
+                  style={{ 
+                    fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                    color: getThemeValue('colors.status.success', '#10b981')
+                  }}
+                >
+                  {stats.complianceRate.toFixed(1)}%
+                </span>
+              </p>
+              <p 
+                style={{ 
+                  fontSize: getThemeValue('typography.tooltipSize', '0.75rem'),
+                  color: getThemeValue('colors.gray.400', '#9ca3af'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                Last updated: {new Date().toLocaleString()}
               </p>
             </div>
           </div>
           
           {alerts.length > 0 && (
-            <div className="flex items-center gap-2 text-red-600">
+            <div 
+              className="flex items-center gap-2" 
+              style={{ color: getThemeValue('colors.status.error', '#ef4444') }}
+            >
               <Bell className="h-5 w-5 animate-pulse" />
-              <span className="font-medium">{alerts.length} Active Alerts</span>
+              <span 
+                style={{ 
+                  fontWeight: getThemeValue('typography.fontWeight.medium', '500'),
+                  fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+                }}
+              >
+                {alerts.length} Active Alerts
+              </span>
             </div>
           )}
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard 
+      {/* KPI Metrics - Consistent grid with theme spacing */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard 
           title="PPM Compliance"
           value={`${stats.complianceRate.toFixed(1)}%`}
-          trend="+5%"
+          trend={{ value: 5, isPositive: true, period: 'vs last month' }}
           color="green"
           icon={CheckCircle}
         />
-        <MetricCard 
+        <KpiCard 
           title="Open Findings"
           value={findings.length.toString()}
-          subtext={`${stats.criticalFindings} Critical`}
-          color="amber"
+          subtitle={`${stats.criticalFindings} Critical`}
+          color="orange"
           icon={AlertTriangle}
         />
-        <MetricCard 
+        <KpiCard 
           title="Equipment Health"
           value={`${((stats.activeEquipment / stats.totalEquipment) * 100).toFixed(1)}%`}
-          subtext={`${stats.faultyEquipment} Faulty`}
-          color={stats.faultyEquipment > 0 ? "red" : "green"}
+          subtitle={`${stats.faultyEquipment} Faulty`}
+          color={stats.faultyEquipment > 0 ? "pink" : "green"}
           icon={stats.faultyEquipment > 0 ? XCircle : CheckCircle}
         />
-        <MetricCard 
+        <KpiCard 
           title="Monthly Cost"
           value={`OMR ${stats.monthlyPPMCost.toLocaleString()}`}
-          trend="+12%"
+          trend={{ value: 12, isPositive: true, period: 'vs last month' }}
           color="blue"
           icon={TrendingUp}
         />
       </div>
 
+      {/* Visual Components - Aligned grid with consistent spacing */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4 flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Building Heat Map
-            </h3>
-            <BuildingHeatMap findings={findings} equipment={equipment} />
-          </div>
+          <h3 
+            className="mb-4 flex items-center gap-2 dark:text-white"
+            style={{ 
+              fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+              fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+              color: getThemeValue('colors.textPrimary', '#111827'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            <MapPin className="h-5 w-5" />
+            Building Heat Map
+          </h3>
+          <BuildingHeatMap findings={findings} equipment={equipment} />
         </Card>
         
         <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Upcoming Inspections
-            </h3>
-            <UpcomingPPMCalendar upcomingCount={stats.upcomingInspections} />
-          </div>
+          <h3 
+            className="mb-4 flex items-center gap-2 dark:text-white"
+            style={{ 
+              fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+              fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+              color: getThemeValue('colors.textPrimary', '#111827'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            <Calendar className="h-5 w-5" />
+            Upcoming Inspections
+          </h3>
+          <UpcomingPPMCalendar upcomingCount={stats.upcomingInspections} />
         </Card>
       </div>
 
+      {/* Critical Findings - Consistent table layout */}
       <Card>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-[#4E4456] dark:text-white flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Critical Findings
-            </h3>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setActiveSubModule('Findings')}
-            >
-              View All
-            </Button>
-          </div>
-          <FindingsTable 
-            findings={findings.slice(0, 5)} 
-            showPagination={false}
-            compact={true}
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <h3 
+            className="flex items-center gap-2 dark:text-white"
+            style={{ 
+              fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+              fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+              color: getThemeValue('colors.textPrimary', '#111827'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            <AlertTriangle className="h-5 w-5" style={{ color: getThemeValue('colors.status.error', '#ef4444') }} />
+            Critical Findings
+          </h3>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setActiveSubModule('Findings')}
+            className="w-fit"
+          >
+            View All
+          </Button>
         </div>
+        <FindingsTable 
+          findings={findings.slice(0, 5)} 
+          showPagination={false}
+          compact={true}
+        />
       </Card>
 
+      {/* Active Alerts - Responsive alert layout */}
       {alerts.length > 0 && (
-        <Card className="border-red-200 bg-red-50 dark:bg-red-900/10">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-red-800 dark:text-red-400 mb-4 flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Active Alerts
-            </h3>
-            <div className="space-y-3">
-              {alerts.slice(0, 3).map((alert) => (
-                <div 
-                  key={alert.id}
-                  className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-red-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${
+        <Card className="border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10">
+          <h3 
+            className="mb-4 flex items-center gap-2"
+            style={{ 
+              fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+              fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+              color: getThemeValue('colors.status.error', '#ef4444'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            <Bell className="h-5 w-5" />
+            Active Alerts
+          </h3>
+          <div className="space-y-3">
+            {alerts.slice(0, 3).map((alert) => (
+              <div 
+                key={alert.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div 
+                    className={`w-3 h-3 rounded-full animate-pulse flex-shrink-0 ${
                       alert.severity === 'Critical' ? 'bg-red-500' :
-                      alert.severity === 'High' ? 'bg-orange-500' :
-                      alert.severity === 'Medium' ? 'bg-yellow-500' :
+                      alert.severity === 'High' ? 'bg-yellow-500' :
+                      alert.severity === 'Medium' ? 'bg-orange-500' :
                       'bg-blue-500'
-                    } animate-pulse`} />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{alert.alert_type}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{alert.message}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(alert.created_at).toLocaleString()}
-                      </p>
-                    </div>
+                    }`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">{alert.alert_type}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{alert.message}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(alert.created_at).toLocaleString()}
+                    </p>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    Acknowledge
-                  </Button>
                 </div>
-              ))}
-            </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-red-300 text-red-500 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20 flex-shrink-0"
+                >
+                  Acknowledge
+                </Button>
+              </div>
+            ))}
           </div>
         </Card>
       )}
-    </>
+    </div>
   );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System</h2>
-        <p className="text-sm text-gray-500">Muscat Bay Safety Management</p>
+    <div className="space-y-6">
+      {/* Header Section - Aligned with enhanced module patterns */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex flex-col gap-1">
+          <h2 
+            className="dark:text-white"
+            style={{ 
+              fontSize: getThemeValue('typography.fontSize.2xl', '1.5rem'),
+              fontWeight: getThemeValue('typography.fontWeight.bold', '700'),
+              color: getThemeValue('colors.textPrimary', '#111827'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            Firefighting & Alarm System
+          </h2>
+          <p 
+            className="text-sm text-gray-500 dark:text-gray-400"
+            style={{ 
+              fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+              color: getThemeValue('colors.gray.500', '#6b7280'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            Muscat Bay Safety Management
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+            <Button
+              onClick={handleExportReport}
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export Report</span>
+            </Button>
+          </div>
+        </div>
       </div>
       
-      <div className="mb-6 flex justify-center">
+      {/* Navigation Menu - Centered with consistent spacing */}
+      <div className="flex justify-center">
         <MenuBar
           items={menuItems}
           activeItem={activeSubModule}
@@ -414,7 +542,10 @@ export const FirefightingDashboard: React.FC = () => {
         />
       </div>
       
-      {renderSubModule()}
+      {/* Main Content - Consistent spacing */}
+      <div className="min-h-[400px]">
+        {renderSubModule()}
+      </div>
     </div>
   );
 };

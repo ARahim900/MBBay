@@ -1,32 +1,8 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Clock, CheckCircle, XCircle, ArrowUpDown, Filter } from 'lucide-react';
 import type { PPMFinding } from '../../types/firefighting';
-
-// Button Component matching the existing design
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-  const variants = {
-    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
-  };
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+import { theme, getThemeValue } from '../../lib/theme';
+import { Button } from '../ui';
 
 interface FindingsTableProps {
   findings: PPMFinding[];
@@ -48,20 +24,40 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'Critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'High': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Low': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Critical': return {
+        backgroundColor: `${theme.colors.status.error}15`,
+        color: theme.colors.status.error,
+        borderColor: `${theme.colors.status.error}33`
+      };
+      case 'High': return {
+        backgroundColor: `${theme.colors.status.warning}15`,
+        color: theme.colors.status.warning,
+        borderColor: `${theme.colors.status.warning}33`
+      };
+      case 'Medium': return {
+        backgroundColor: `${theme.colors.extended.orange}15`,
+        color: theme.colors.extended.orange,
+        borderColor: `${theme.colors.extended.orange}33`
+      };
+      case 'Low': return {
+        backgroundColor: `${theme.colors.status.info}15`,
+        color: theme.colors.status.info,
+        borderColor: `${theme.colors.status.info}33`
+      };
+      default: return {
+        backgroundColor: `${theme.colors.gray[500]}15`,
+        color: theme.colors.gray[500],
+        borderColor: `${theme.colors.gray[500]}33`
+      };
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Open': return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'In Progress': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'Closed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      default: return <AlertTriangle className="h-4 w-4 text-gray-500" />;
+      case 'Open': return <XCircle className="h-4 w-4" style={{ color: theme.colors.status.error }} />;
+      case 'In Progress': return <Clock className="h-4 w-4" style={{ color: theme.colors.status.warning }} />;
+      case 'Closed': return <CheckCircle className="h-4 w-4" style={{ color: theme.colors.status.success }} />;
+      default: return <AlertTriangle className="h-4 w-4" style={{ color: theme.colors.gray[500] }} />;
     }
   };
 
@@ -101,9 +97,9 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
   if (findings.length === 0) {
     return (
       <div className="text-center py-8">
-        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-        <p className="text-gray-600 dark:text-gray-300">No findings to display</p>
-        <p className="text-sm text-gray-500">All systems are operating normally</p>
+        <CheckCircle className="h-12 w-12 mx-auto mb-4" style={{ color: theme.colors.status.success }} />
+        <p style={{ color: theme.colors.textSecondary, fontSize: theme.typography.labelSize }}>No findings to display</p>
+        <p style={{ color: theme.colors.gray[500], fontSize: theme.typography.tooltipSize }}>All systems are operating normally</p>
       </div>
     );
   }
@@ -118,6 +114,11 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
               className="border border-gray-300 rounded-md px-3 py-1 text-sm dark:bg-gray-800 dark:border-gray-600"
+              style={{
+                borderRadius: theme.borderRadius.md,
+                fontSize: theme.typography.labelSize,
+                fontFamily: theme.typography.fontFamily
+              }}
             >
               <option value="">All Severities</option>
               <option value="Critical">Critical</option>
@@ -131,6 +132,11 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-1 text-sm dark:bg-gray-800 dark:border-gray-600"
+            style={{
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.labelSize,
+              fontFamily: theme.typography.fontFamily
+            }}
           >
             <option value="">All Statuses</option>
             <option value="Open">Open</option>
@@ -141,13 +147,22 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800">
+        <table className="w-full text-left" style={{ fontSize: theme.typography.labelSize, fontFamily: theme.typography.fontFamily }}>
+          <thead style={{ 
+            fontSize: theme.typography.tooltipSize, 
+            color: theme.colors.textSecondary,
+            backgroundColor: theme.colors.gray[50]
+          }} className="uppercase dark:bg-gray-800">
             <tr>
               <th className="px-4 py-3">
                 <button
                   onClick={() => handleSort('severity')}
                   className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-300"
+                  style={{ 
+                    fontSize: theme.typography.tooltipSize,
+                    fontFamily: theme.typography.fontFamily,
+                    fontWeight: theme.typography.fontWeight.medium
+                  }}
                 >
                   Severity
                   <ArrowUpDown className="h-3 w-3" />
@@ -184,7 +199,16 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
             {paginatedFindings.map((finding) => (
               <tr key={finding.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getSeverityColor(finding.severity)}`}>
+                  <span 
+                    className="px-2 py-1 text-xs rounded-full border"
+                    style={{
+                      ...getSeverityColor(finding.severity),
+                      fontSize: theme.typography.tooltipSize,
+                      fontFamily: theme.typography.fontFamily,
+                      fontWeight: theme.typography.fontWeight.medium,
+                      borderRadius: theme.borderRadius.full
+                    }}
+                  >
                     {finding.severity}
                   </span>
                 </td>

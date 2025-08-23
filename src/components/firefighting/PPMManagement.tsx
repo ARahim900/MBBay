@@ -1,51 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Clock, CheckCircle, XCircle, Filter, Search, FileText, Camera, AlertTriangle } from 'lucide-react';
+import { Calendar, Plus, Clock, CheckCircle, XCircle, Filter, Search, FileText, AlertTriangle } from 'lucide-react';
 import { FirefightingAPI } from '../../lib/firefighting-api';
 import type { PPMRecord, PPMFinding, PPMLocation } from '../../types/firefighting';
 import { PPMScheduleView } from './PPMScheduleView';
 import { InspectionFormModal } from './InspectionFormModal';
 import { FindingFormModal } from './FindingFormModal';
+import { Card, Button } from '../ui';
+import { theme, getThemeValue } from '../../lib/theme';
 
-// Card Component matching the existing design
-const Card = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), Math.random() * 200);
-    return () => clearTimeout(timer);
-  }, []);
 
-  return (
-    <div className={`bg-white dark:bg-[#2C2834] rounded-xl shadow-md hover:shadow-xl border border-gray-200/80 dark:border-white/10 p-4 md:p-6 transition-all duration-300 hover:-translate-y-1 ${isMounted ? 'fade-in-up' : 'opacity-0 translate-y-4'} ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-// Button Component matching the existing design
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-  const variants = {
-    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
-  };
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
 
 interface PPMManagementProps {}
 
@@ -144,19 +107,35 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Failed': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'Completed': return {
+        backgroundColor: `${theme.colors.status.success}15`,
+        color: theme.colors.status.success,
+        borderColor: `${theme.colors.status.success}33`
+      };
+      case 'Pending': return {
+        backgroundColor: `${theme.colors.status.warning}15`,
+        color: theme.colors.status.warning,
+        borderColor: `${theme.colors.status.warning}33`
+      };
+      case 'Failed': return {
+        backgroundColor: `${theme.colors.status.error}15`,
+        color: theme.colors.status.error,
+        borderColor: `${theme.colors.status.error}33`
+      };
+      default: return {
+        backgroundColor: `${theme.colors.gray[500]}15`,
+        color: theme.colors.gray[500],
+        borderColor: `${theme.colors.gray[500]}33`
+      };
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'Pending': return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'Failed': return <XCircle className="h-4 w-4 text-red-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
+      case 'Completed': return <CheckCircle className="h-4 w-4" style={{ color: theme.colors.status.success }} />;
+      case 'Pending': return <Clock className="h-4 w-4" style={{ color: theme.colors.status.warning }} />;
+      case 'Failed': return <XCircle className="h-4 w-4" style={{ color: theme.colors.status.error }} />;
+      default: return <Clock className="h-4 w-4" style={{ color: theme.colors.gray[500] }} />;
     }
   };
 
@@ -183,8 +162,17 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
     return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading PPM data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderBottomColor: getThemeValue('colors.status.error', '#ef4444') }}></div>
+          <p 
+            className="mt-4 dark:text-gray-300"
+            style={{ 
+              color: getThemeValue('colors.textSecondary', '#6B7280'),
+              fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+            }}
+          >
+            Loading PPM data...
+          </p>
         </div>
       </div>
     );
@@ -208,39 +196,30 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
       <Card>
         <div className="flex items-center gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={() => setView('schedule')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                view === 'schedule'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-              }`}
+              variant={view === 'schedule' ? 'danger' : 'ghost'}
+              size="md"
             >
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-4 w-4 mr-2" />
               Schedule
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setView('records')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                view === 'records'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-              }`}
+              variant={view === 'records' ? 'danger' : 'ghost'}
+              size="md"
             >
-              <FileText className="h-4 w-4" />
+              <FileText className="h-4 w-4 mr-2" />
               Records
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setView('findings')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                view === 'findings'
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-              }`}
+              variant={view === 'findings' ? 'danger' : 'ghost'}
+              size="md"
             >
-              <AlertTriangle className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4 mr-2" />
               Findings
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -333,7 +312,13 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
                         {new Date(record.ppm_date).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                        <span 
+                          className="px-2 py-1 text-xs rounded-full"
+                          style={{ 
+                            backgroundColor: `${theme.colors.status.info}15`,
+                            color: theme.colors.status.info
+                          }}
+                        >
                           {record.ppm_type}
                         </span>
                       </td>
@@ -343,7 +328,10 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {getStatusIcon(record.overall_status)}
-                          <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(record.overall_status)}`}>
+                          <span 
+                            className="px-2 py-1 text-xs rounded-full border"
+                            style={getStatusColor(record.overall_status)}
+                          >
                             {record.overall_status}
                           </span>
                         </div>
@@ -354,7 +342,7 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
                             {record.findings?.length || 0} findings
                           </span>
                           {(record.findings?.length || 0) > 0 && (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                            <AlertTriangle className="h-4 w-4" style={{ color: theme.colors.status.warning }} />
                           )}
                         </div>
                       </td>
@@ -396,25 +384,52 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
           <div className="p-6">
             <div className="space-y-4">
               {findings.map((finding) => (
-                <div
+                <Card
                   key={finding.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                  padding="md"
+                  hover={true}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 text-xs rounded-full border ${
-                        finding.severity === 'Critical' ? 'bg-red-100 text-red-800 border-red-200' :
-                        finding.severity === 'High' ? 'bg-orange-100 text-orange-800 border-orange-200' :
-                        finding.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                        'bg-blue-100 text-blue-800 border-blue-200'
-                      }`}>
+                      <span 
+                        className="px-2 py-1 text-xs rounded-full border"
+                        style={{
+                          backgroundColor: 
+                            finding.severity === 'Critical' ? `${theme.colors.status.error}15` :
+                            finding.severity === 'High' ? `${theme.colors.status.warning}15` :
+                            finding.severity === 'Medium' ? `${theme.colors.extended.orange}15` :
+                            `${theme.colors.status.info}15`,
+                          color:
+                            finding.severity === 'Critical' ? theme.colors.status.error :
+                            finding.severity === 'High' ? theme.colors.status.warning :
+                            finding.severity === 'Medium' ? theme.colors.extended.orange :
+                            theme.colors.status.info,
+                          borderColor:
+                            finding.severity === 'Critical' ? `${theme.colors.status.error}33` :
+                            finding.severity === 'High' ? `${theme.colors.status.warning}33` :
+                            finding.severity === 'Medium' ? `${theme.colors.extended.orange}33` :
+                            `${theme.colors.status.info}33`
+                        }}
+                      >
                         {finding.severity}
                       </span>
-                      <span className={`px-2 py-1 text-xs rounded-full border ${
-                        finding.status === 'Open' ? 'bg-red-100 text-red-800 border-red-200' :
-                        finding.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                        'bg-green-100 text-green-800 border-green-200'
-                      }`}>
+                      <span 
+                        className="px-2 py-1 text-xs rounded-full border"
+                        style={{
+                          backgroundColor: 
+                            finding.status === 'Open' ? `${theme.colors.status.error}15` :
+                            finding.status === 'In Progress' ? `${theme.colors.status.warning}15` :
+                            `${theme.colors.status.success}15`,
+                          color:
+                            finding.status === 'Open' ? theme.colors.status.error :
+                            finding.status === 'In Progress' ? theme.colors.status.warning :
+                            theme.colors.status.success,
+                          borderColor:
+                            finding.status === 'Open' ? `${theme.colors.status.error}33` :
+                            finding.status === 'In Progress' ? `${theme.colors.status.warning}33` :
+                            `${theme.colors.status.success}33`
+                        }}
+                      >
                         {finding.status}
                       </span>
                     </div>
@@ -446,13 +461,13 @@ export const PPMManagement: React.FC<PPMManagementProps> = () => {
                       <strong>Estimated Cost:</strong> OMR {finding.estimated_cost.toLocaleString()}
                     </div>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
 
             {findings.length === 0 && (
               <div className="text-center py-8">
-                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                <CheckCircle className="h-12 w-12 mx-auto mb-4" style={{ color: theme.colors.status.success }} />
                 <p className="text-gray-600 dark:text-gray-300">No findings reported</p>
                 <p className="text-sm text-gray-500">All systems are operating normally</p>
               </div>

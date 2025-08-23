@@ -1,32 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import type { Equipment, EquipmentType, PPMLocation } from '../../types/firefighting';
-
-// Button Component matching the existing design
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }: any) => {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-  const variants = {
-    default: 'bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg active:scale-95',
-    outline: 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg active:scale-95'
-  };
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+import { theme, getThemeValue } from '../../lib/theme';
+import { Button } from '../ui';
 
 interface EquipmentModalProps {
   isOpen: boolean;
@@ -143,7 +119,15 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-[#4E4456] dark:text-white">
+          <h2 
+            className="dark:text-white"
+            style={{ 
+              fontSize: theme.typography.fontSize.xl,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}
+          >
             {equipment ? 'Edit Equipment' : 'Add Equipment'}
           </h2>
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -154,7 +138,15 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label 
+                className="block mb-1 dark:text-gray-300"
+                style={{ 
+                  fontSize: theme.typography.labelSize,
+                  fontWeight: theme.typography.fontWeight.medium,
+                  color: theme.colors.textSecondary,
+                  fontFamily: theme.typography.fontFamily
+                }}
+              >
                 Equipment Code *
               </label>
               <input
@@ -162,10 +154,16 @@ export const EquipmentModal: React.FC<EquipmentModalProps> = ({
                 name="equipment_code"
                 value={formData.equipment_code}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`w-full border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                   errors.equipment_code ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="e.g., FAP-001"
+                style={{
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.labelSize,
+                  fontFamily: theme.typography.fontFamily
+                }}
               />
               {errors.equipment_code && (
                 <p className="text-red-500 text-xs mt-1">{errors.equipment_code}</p>

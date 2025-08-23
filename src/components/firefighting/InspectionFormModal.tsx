@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, MapPin } from 'lucide-react';
 import { Button } from '../ui/Button';
 import type { PPMRecord, PPMLocation } from '../../types/firefighting';
+import { theme, getThemeValue } from '../../lib/theme';
 
 interface InspectionFormModalProps {
   isOpen: boolean;
@@ -112,7 +113,15 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-[#4E4456] dark:text-white">
+          <h2 
+            style={{ 
+              fontSize: theme.typography.fontSize.xl,
+              fontWeight: theme.typography.fontWeight.semibold,
+              color: theme.colors.textPrimary,
+              fontFamily: theme.typography.fontFamily
+            }}
+            className="dark:text-white"
+          >
             {record ? 'Edit Inspection Record' : 'New PPM Inspection'}
           </h2>
           <Button variant="outline" size="sm" onClick={onClose}>
@@ -123,7 +132,15 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label 
+                className="block mb-2 dark:text-gray-300"
+                style={{ 
+                  fontSize: theme.typography.labelSize,
+                  fontWeight: theme.typography.fontWeight.medium,
+                  color: theme.colors.textSecondary,
+                  fontFamily: theme.typography.fontFamily
+                }}
+              >
                 <MapPin className="h-4 w-4 inline mr-1" />
                 Location *
               </label>
@@ -131,9 +148,15 @@ export const InspectionFormModal: React.FC<InspectionFormModalProps> = ({
                 name="location_id"
                 value={formData.location_id}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`w-full border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                   errors.location_id ? 'border-red-500' : 'border-gray-300'
                 }`}
+                style={{
+                  padding: theme.spacing.sm,
+                  borderRadius: theme.borderRadius.md,
+                  fontSize: theme.typography.labelSize,
+                  fontFamily: theme.typography.fontFamily
+                }}
               >
                 <option value="">Select location</option>
                 {locations.map(location => (
