@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { create } from 'zustand';
-import { Bell, Droplets, Flame, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle } from 'lucide-react';
+import { Bell, Droplets, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle } from 'lucide-react';
 import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
 import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
 import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
@@ -495,145 +495,6 @@ const HVACModule = () => {
     return <EnhancedHVACModule />;
 };
 
-// -- FIREFIGHTING & ALARM MODULE --
-const firefightingKpis = [
-    { title: "TOTAL EQUIPMENT", value: "8 systems", subValue: "Kidde Fire system", icon: Settings },
-    { title: "OPERATIONAL", value: "62.5%", subValue: "5 of 8 systems", icon: CheckCircle },
-    { title: "CRITICAL PRIORITY", value: "4 systems", subValue: "Require immediate attention", icon: AlertTriangle },
-    { title: "MAINTENANCE DUE", value: "1 systems", subValue: "Scheduled maintenance needed", icon: HardHat },
-];
-const systemStatusData = [
-    { name: 'Operational', value: 5 }, 
-    { name: 'Needs Attention', value: 1 },
-    { name: 'Critical', value: 1 }, 
-    { name: 'Maintenance Due', value: 1 },
-];
-const equipmentByTypeData = [
-    { name: 'Control Panel', count: 2 }, { name: 'Smoke Detector', count: 1 }, { name: 'Extinguisher', count: 1 },
-    { name: 'Exit Sign', count: 1 }, { name: 'Addressable Panel', count: 1 }, { name: 'Diesel Pump', count: 1 }, { name: 'Heat Detector', count: 1 }
-];
-const fireSafetyEquipmentData = [
-    { equipment: "Main Fire Alarm Control Panel", model: "Notifier NF S2-3030", location: "FM Building", zone: "Zone FM", status: "Operational", priority: "Critical", battery: "95%", signal: "Strong", nextMaintenance: "01/03/2025", inspector: "Bahwan Engineering" },
-    { equipment: "Optical Smoke Detector", model: "Honeywell Series", location: "B1 Building", zone: "Zone 01", status: "Needs Attention", priority: "High", battery: "78%", signal: "Weak", nextMaintenance: "15/02/2025", inspector: "Bahwan Engineering" },
-    { equipment: "Sprinkler System Zone 1", model: "Viking System", location: "B2 Building", zone: "Zone 02", status: "Operational", priority: "Critical", battery: "100%", signal: "Strong", nextMaintenance: "10/06/2025", inspector: "Bahwan Engineering" },
-    { equipment: "CO2 Fire Extinguisher", model: "Kidde Fire Sup", location: "D44 Building", zone: "Zone 03A", status: "Expired", priority: "Medium", battery: "N/A", signal: "N/A", nextMaintenance: "01/03/2025", inspector: "Bahwan Engineering" },
-    { equipment: "LED Emergency Exit Sign", model: "Philips Lighting", location: "D45 Building", zone: "Zone 03B", status: "Operational", priority: "Medium", battery: "88%", signal: "Strong", nextMaintenance: "20/01/2025", inspector: "Bahwan Engineering" },
-    { equipment: "Addressable Fire Panel", model: "Honeywell FAC-HP", location: "Sales Center", zone: "Sales Center", status: "Operational", priority: "Critical", battery: "92%", signal: "Strong", nextMaintenance: "28/02/2025", inspector: "Bahwan Engineering" },
-    { equipment: "Diesel Fire Pump", model: "Grundfos NK 200", location: "Pump Room", zone: "Zone FM", status: "Operational", priority: "Critical", battery: "100%", signal: "Strong", nextMaintenance: "05/03/2025", inspector: "Bahwan Engineering" },
-    { equipment: "Rate of Rise Heat Detector", model: "Hochiki DCD-1E", location: "B5 Building", zone: "Zone 05", status: "Maintenance Due", priority: "High", battery: "65%", signal: "Moderate", nextMaintenance: "15/02/2025", inspector: "Bahwan Engineering" },
-];
-
-const FirefightingModule = () => {
-    try {
-        const StatusBadge = ({ status }: { status: string }) => {
-            if (!status) return null;
-            
-            const colors: { [key: string]: string } = {
-                Operational: 'bg-green-100 text-green-800', 
-                Critical: 'bg-red-100 text-red-800',
-                'Needs Attention': 'bg-yellow-100 text-yellow-800', 
-                Expired: 'bg-gray-100 text-gray-800',
-                'Maintenance Due': 'bg-blue-100 text-blue-800', 
-                High: 'bg-orange-100 text-orange-800', 
-                Medium: 'bg-yellow-100 text-yellow-800',
-            };
-            return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100 text-gray-800'}`}>{status}</span>;
-        };
-        
-        return (
-            <div className="space-y-6">
-                <div className="mb-6">
-                     <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Firefighting & Alarm System Management</h2>
-                     <p className="text-sm text-gray-500 mt-1">Monitor and maintain fire safety equipment across all zones</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {firefightingKpis && firefightingKpis.map((kpi, index) => {
-                        const IconComponent = kpi?.icon;
-                        if (!IconComponent) return null;
-                        
-                        return (
-                            <Card key={kpi?.title || index} className="flex items-center gap-4">
-                                <IconComponent className="w-8 h-8 text-gray-500" />
-                                <div>
-                                    <p className="text-sm text-gray-500">{kpi?.title || ''}</p>
-                                    <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi?.value || ''}</p>
-                                    <p className="text-xs text-gray-400">{kpi?.subValue || ''}</p>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
-                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                     <ModernDonutChart
-                        data={systemStatusData || []}
-                        config={{
-                            Operational: { label: 'Operational', color: theme?.colors?.extended?.green || '#22c55e' },
-                            'Needs Attention': { label: 'Needs Attention', color: theme?.colors?.accent || '#F7C604' },
-                            Critical: { label: 'Critical', color: theme?.colors?.secondary || '#FF5B5B' },
-                            'Maintenance Due': { label: 'Maintenance Due', color: theme?.colors?.primary || '#2D9CDB' }
-                        }}
-                        title="System Status Distribution"
-                        height="h-[250px]"
-                        showLegend={true}
-                     />
-                     <ModernBarChart
-                        data={equipmentByTypeData || []}
-                        config={{
-                            count: { label: 'Equipment Count', color: theme?.colors?.primary || '#3B82F6' }
-                        }}
-                        title="Equipment by Type"
-                        height="h-[250px]"
-                        showLegend={false}
-                     />
-                 </div>
-                 <Card>
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                        <input type="text" placeholder="Search Equipment..." className="p-2 border rounded-md dark:bg-white/10 col-span-1 md:col-span-2" />
-                        <select className="p-2 border rounded-md dark:bg-white/10"><option>All Zones</option></select>
-                        <select className="p-2 border rounded-md dark:bg-white/10"><option>All System Types</option></select>
-                        <button className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors active:scale-95">Apply Filters</button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
-                                <tr>{['Equipment', 'Location', 'Status', 'Priority', 'Battery', 'Signal', 'Next Maintenance', 'Inspector'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
-                            </thead>
-                            <tbody>
-                                {fireSafetyEquipmentData && fireSafetyEquipmentData.map((item, idx) => (
-                                    <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                        <td className="px-4 py-2 font-medium">{item?.equipment || ''}<p className="text-xs text-gray-400">{item?.model || ''}</p></td>
-                                        <td className="px-4 py-2">{item?.location || ''}<p className="text-xs text-gray-400">{item?.zone || ''}</p></td>
-                                        <td className="px-4 py-2"><StatusBadge status={item?.status || ''} /></td>
-                                        <td className="px-4 py-2"><StatusBadge status={item?.priority || ''} /></td>
-                                        <td className="px-4 py-2">{item?.battery || ''}</td><td className="px-4 py-2">{item?.signal || ''}</td>
-                                        <td className="px-4 py-2">{item?.nextMaintenance || ''}</td><td className="px-4 py-2">{item?.inspector || ''}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                     <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-                        <p>Showing 8 of 8 systems</p>
-                    </div>
-                 </Card>
-            </div>
-        );
-    } catch (error) {
-        console.error('FirefightingModule error:', error);
-        return (
-            <div className="p-8 text-center">
-                <h2 className="text-xl font-bold text-red-600 mb-4">Firefighting Module Error</h2>
-                <p className="text-gray-600">There was an error loading the firefighting module. Please check the console for details.</p>
-                <button 
-                    onClick={() => window.location.reload()} 
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                    Reload Page
-                </button>
-            </div>
-        );
-    }
-};
 
 
 // -- CONTRACTOR TRACKER MODULE --
@@ -747,7 +608,6 @@ const Sidebar = () => {
         { name: 'Water', icon: Droplets }, 
         { name: 'Electricity', icon: Power }, 
         { name: 'HVAC System', icon: BarChart2 }, 
-        { name: 'Firefighting & Alarm', icon: Flame }, 
         { name: 'Contractor Tracker', icon: HardHat }, 
         { name: 'STP Plant', icon: Settings }, 
     ];
@@ -909,7 +769,6 @@ export default function App() {
       case 'Water': return <WaterModule />;
       case 'Electricity': return <ElectricityModule />;
       case 'HVAC System': return <HVACModule />;
-      case 'Firefighting & Alarm': return <FirefightingModule />;
       case 'Contractor Tracker': return <ContractorModule />;
       case 'STP Plant': return <STPPlantModule />;
       default: return <WaterModule />; // Default to Water
