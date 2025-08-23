@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { create } from 'zustand';
-import { Bell, Droplets, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle } from 'lucide-react';
+import { Bell, Droplets, HardHat, Home, Menu, Power, Settings, User, Wind, X, TrendingUp, Filter, Download, PieChart as PieIcon, Database, LayoutGrid, TrendingDown, RefreshCw, Calendar, ChevronDown, ChevronRight, ChevronsRight, Search, LayoutDashboard, MapPin, CheckCircle, BarChart2, AlertTriangle, XCircle, Flame } from 'lucide-react';
 import { EnhancedWaterModule } from './src/components/EnhancedWaterModule';
 import { EnhancedElectricityModule } from './src/components/EnhancedElectricityModule';
 import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
+import { FirefightingDashboard } from './src/components/FirefightingDashboard';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
 import { theme } from './src/lib/theme';
@@ -577,6 +578,11 @@ const ContractorModule = () => {
 };
 
 // -- STP PLANT MODULE --
+// -- FIREFIGHTING MODULE --
+const FirefightingModule = () => {
+    return <FirefightingDashboard />;
+};
+
 const STPPlantModule = () => {
     const [useBackup, setUseBackup] = useState(false);
 
@@ -608,6 +614,7 @@ const Sidebar = () => {
         { name: 'Water', icon: Droplets }, 
         { name: 'Electricity', icon: Power }, 
         { name: 'HVAC System', icon: BarChart2 }, 
+        { name: 'Firefighting & Alarm', icon: Flame },
         { name: 'Contractor Tracker', icon: HardHat }, 
         { name: 'STP Plant', icon: Settings }, 
     ];
@@ -769,6 +776,7 @@ export default function App() {
       case 'Water': return <WaterModule />;
       case 'Electricity': return <ElectricityModule />;
       case 'HVAC System': return <HVACModule />;
+      case 'Firefighting & Alarm': return <FirefightingModule />;
       case 'Contractor Tracker': return <ContractorModule />;
       case 'STP Plant': return <STPPlantModule />;
       default: return <WaterModule />; // Default to Water
