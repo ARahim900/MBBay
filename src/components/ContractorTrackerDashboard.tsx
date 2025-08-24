@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   HardHat, 
   CheckCircle, 
@@ -34,6 +34,8 @@ import { getThemeValue } from '../lib/theme';
 import type { Contractor } from '../types/contractor';
 
 export const ContractorTrackerDashboard: React.FC = () => {
+  console.log('ContractorTrackerDashboard: Component rendering started');
+  
   const [activeSubModule, setActiveSubModule] = useState('Dashboard');
   
   // Modal states
@@ -43,69 +45,176 @@ export const ContractorTrackerDashboard: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
   
+  // Add error boundary state
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  
   // Use the contractor data hook with real-time support
+  let contractorDataHook;
+  try {
+    contractorDataHook = useContractorData({
+      enableRealtime: true,
+      conflictResolution: 'prompt-user' // Show conflict resolution modal
+    });
+    console.log('ContractorTrackerDashboard: useContractorData hook initialized successfully');
+  } catch (error) {
+    console.error('ContractorTrackerDashboard: Error initializing useContractorData hook:', error);
+    setHasError(true);
+    setErrorMessage(`Failed to initialize data hook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+  
+  // Destructure with safe fallbacks
   const {
-    allData,
-    filteredData,
-    summary,
-    expiringContracts,
-    contractsByService,
-    loading,
-    error,
-    lastFetchTime,
-    filters,
-    updateFilters,
-    forceRefresh,
-    updateContractor,
-    removeContractor,
-    addContractor,
+    allData = [],
+    filteredData = [],
+    summary = {
+      total_contracts: 0,
+      active_contracts: 0,
+      expired_contracts: 0,
+      pending_contracts: 0,
+      total_yearly_value: 0,
+      average_contract_duration: 0
+    },
+    expiringContracts = [],
+    contractsByService = [],
+    loading = false,
+    error = null,
+    lastFetchTime = null,
+    filters = {
+      status: 'all',
+      search: '',
+      contractType: 'all',
+      dateRange: null,
+      serviceCategory: null
+    },
+    updateFilters = () => {},
+    forceRefresh = () => {},
+    updateContractor = () => {},
+    removeContractor = () => {},
+    addContractor = () => {},
     // Error handling and offline support
-    isOnline,
-    connectionQuality,
-    isUsingCache,
-    cacheStats,
-    cacheAge,
-    retryCount,
-    canRetry,
-    isRetrying,
-    clearError,
-    retryOperation,
-    shouldShowOfflineWarning,
-    shouldShowRetryButton,
+    isOnline = true,
+    connectionQuality = 'good',
+    isUsingCache = false,
+    cacheStats = {},
+    cacheAge = 0,
+    retryCount = 0,
+    canRetry = false,
+    isRetrying = false,
+    clearError = () => {},
+    retryOperation = () => {},
+    shouldShowOfflineWarning = false,
+    shouldShowRetryButton = false,
     // Real-time functionality
-    realtime,
-    conflictData,
-    hasConflict,
-    resolveConflict,
-    cancelConflictResolution,
-    isRealtimeEnabled,
-    isRealtimeConnected,
-    shouldShowRealtimeStatus,
-    realtimeEventCount
-  } = useContractorData({
-    enableRealtime: true,
-    conflictResolution: 'prompt-user' // Show conflict resolution modal
-  });
+    realtime = {
+      isConnected: false,
+      eventCount: 0,
+      lastEvent: null
+    },
+    conflictData = null,
+    hasConflict = false,
+    resolveConflict = () => {},
+    cancelConflictResolution = () => {},
+    isRealtimeEnabled = false,
+    isRealtimeConnected = false,
+    shouldShowRealtimeStatus = false,
+    realtimeEventCount = 0
+  } = contractorDataHook || {};
 
   // Toast notifications for errors
+  let errorToastHook;
+  try {
+    errorToastHook = useContractorErrorToast();
+    console.log('ContractorTrackerDashboard: useContractorErrorToast hook initialized successfully');
+  } catch (error) {
+    console.error('ContractorTrackerDashboard: Error initializing useContractorErrorToast hook:', error);
+  }
+  
   const {
-    showApiError,
-    showNetworkError,
-    showOfflineWarning,
-    showCacheInfo,
-    showOperationSuccess
-  } = useContractorErrorToast();
+    showApiError = () => {},
+    showNetworkError = () => {},
+    showOfflineWarning = () => {},
+    showCacheInfo = () => {},
+    showOperationSuccess = () => {}
+  } = errorToastHook || {};
 
   // Handle refresh with error handling
   const handleRefresh = async () => {
     try {
-      clearError();
+      console.log('ContractorTrackerDashboard: Refresh requested');
       await forceRefresh();
-      showOperationSuccess('Data refreshed successfully');
+      console.log('ContractorTrackerDashboard: Refresh completed');
     } catch (error) {
-      showApiError(error as Error, 'refresh data', handleRefresh);
+      console.error('ContractorTrackerDashboard: Refresh failed:', error);
+      setHasError(true);
+      setErrorMessage(`Refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
+
+  // Add useEffect for debugging
+  useEffect(() => {
+    console.log('ContractorTrackerDashboard: Component mounted');
+    console.log('ContractorTrackerDashboard: Loading state:', loading);
+    console.log('ContractorTrackerDashboard: Error state:', error);
+    console.log('ContractorTrackerDashboard: Data count:', allData.length);
+    
+    return () => {
+      console.log('ContractorTrackerDashboard: Component unmounting');
+    };
+  }, [loading, error, allData.length]);
+
+  // Error boundary fallback
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-4">
+        <Card className="max-w-md w-full">
+          <div className="text-center" style={{ color: getThemeValue('colors.status.error', '#ef4444') }}>
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+            <h3 
+              className="mb-2"
+              style={{ 
+                fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Component Error
+            </h3>
+            <p 
+              className="mb-4"
+              style={{ 
+                fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                color: getThemeValue('colors.textSecondary', '#6B7280'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              {errorMessage}
+            </p>
+            <Button onClick={() => window.location.reload()} variant="primary" className="w-full">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reload Page
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Simple fallback UI to ensure something always renders
+  if (!contractorDataHook) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-4">
+        <Card className="max-w-md w-full">
+          <div className="text-center">
+            <HardHat className="h-12 w-12 mx-auto mb-4 text-blue-500" />
+            <h3 className="mb-2 text-lg font-semibold">Contractor Tracker</h3>
+            <p className="mb-4 text-gray-600">Initializing dashboard...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   // Handle retry operation
   const handleRetry = async () => {
