@@ -154,7 +154,100 @@ export const ContractorTrackerDashboard: React.FC = () => {
     }
   };
 
-  // Add useEffect for debugging and error handling
+  // Comprehensive data validation and debug logging
+  const validateContractorData = (contractor: any, index: number): boolean => {
+    try {
+      const requiredFields = ['id', 'contractor_name', 'service_provided', 'status', 'contract_type', 'start_date', 'end_date'];
+      const missingFields = requiredFields.filter(field => !contractor[field]);
+      
+      if (missingFields.length > 0) {
+        console.warn(`ContractorTrackerDashboard: Contractor at index ${index} missing required fields:`, missingFields, contractor);
+        return false;
+      }
+      
+      // Validate numeric fields
+      if (contractor.contract_yearly_amount !== undefined && contractor.contract_yearly_amount !== null) {
+        if (isNaN(Number(contractor.contract_yearly_amount))) {
+          console.warn(`ContractorTrackerDashboard: Invalid yearly amount for contractor ${contractor.id}:`, contractor.contract_yearly_amount);
+          return false;
+        }
+      }
+      
+      // Validate dates
+      const startDate = new Date(contractor.start_date);
+      const endDate = new Date(contractor.end_date);
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.warn(`ContractorTrackerDashboard: Invalid dates for contractor ${contractor.id}:`, {
+          start_date: contractor.start_date,
+          end_date: contractor.end_date
+        });
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`ContractorTrackerDashboard: Error validating contractor at index ${index}:`, error, contractor);
+      return false;
+    }
+  };
+
+  const validateSummaryData = (summary: any): boolean => {
+    try {
+      if (!summary) {
+        console.warn('ContractorTrackerDashboard: Summary data is null or undefined');
+        return false;
+      }
+      
+      const requiredFields = ['total_contracts', 'active_contracts', 'expired_contracts', 'total_yearly_value'];
+      const missingFields = requiredFields.filter(field => summary[field] === undefined || summary[field] === null);
+      
+      if (missingFields.length > 0) {
+        console.warn('ContractorTrackerDashboard: Summary missing required fields:', missingFields, summary);
+        return false;
+      }
+      
+      // Validate numeric fields
+      const numericFields = ['total_contracts', 'active_contracts', 'expired_contracts', 'total_yearly_value'];
+      const invalidNumericFields = numericFields.filter(field => {
+        const value = summary[field];
+        return typeof value !== 'number' || isNaN(value);
+      });
+      
+      if (invalidNumericFields.length > 0) {
+        console.warn('ContractorTrackerDashboard: Summary has invalid numeric fields:', invalidNumericFields, summary);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error validating summary data:', error, summary);
+      return false;
+    }
+  };
+
+  const logDataFlow = () => {
+    console.group('ContractorTrackerDashboard: Data Flow Analysis');
+    console.log('All Data Count:', allData?.length || 0);
+    console.log('Valid Data Count:', allData?.filter((c, i) => validateContractorData(c, i)).length || 0);
+    console.log('Summary Valid:', validateSummaryData(safeSummary));
+    console.log('Expiring Contracts Count:', expiringContracts?.length || 0);
+    console.log('Loading State:', loading);
+    console.log('Error State:', error);
+    console.log('Data Ready:', isDataReady);
+    
+    // Log sample data for debugging
+    if (allData && allData.length > 0) {
+      console.log('Sample Contractor Data:', allData[0]);
+    }
+    
+    if (safeSummary) {
+      console.log('Summary Data:', safeSummary);
+    }
+    
+    console.groupEnd();
+  };
+
+  // Enhanced useEffect with comprehensive logging
   useEffect(() => {
     console.log('ContractorTrackerDashboard: Component mounted');
     console.log('ContractorTrackerDashboard: Loading state:', loading);
@@ -168,10 +261,15 @@ export const ContractorTrackerDashboard: React.FC = () => {
       setErrorMessage(`Data hook error: ${error.message || 'Unknown error'}`);
     }
     
+    // Log data flow for debugging
+    if (!loading && allData.length > 0) {
+      logDataFlow();
+    }
+    
     return () => {
       console.log('ContractorTrackerDashboard: Component unmounting');
     };
-  }, [loading, error, allData.length, summary]);
+  }, [loading, error, allData.length, summary, safeSummary, expiringContracts, isDataReady]);
 
   // Check if hooks are properly initialized and data is available
   const isDataReady = !loading && !error && safeSummary && allData.length >= 0;
@@ -362,126 +460,319 @@ export const ContractorTrackerDashboard: React.FC = () => {
     }
   };
 
-  // Enhanced KPI calculation functions
-  const formatCurrency = (amount: number): string => {
-    if (amount >= 1000000) {
-      return `OMR ${(amount / 1000000).toFixed(1)}M`;
-    } else if (amount >= 1000) {
-      return `OMR ${(amount / 1000).toFixed(1)}K`;
+  // Enhanced KPI calculation functions with crash prevention
+  const formatCurrency = (amount: number | undefined | null): string => {
+    // Defensive check: return safe default if value is invalid
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      console.log('ContractorTrackerDashboard: formatCurrency called with invalid value:', amount);
+      return 'OMR 0';
     }
-    return `OMR ${amount.toLocaleString()}`;
+    
+    // Ensure amount is a valid number
+    const validAmount = Number(amount);
+    if (isNaN(validAmount)) {
+      console.log('ContractorTrackerDashboard: formatCurrency received NaN after conversion:', amount);
+      return 'OMR 0';
+    }
+    
+    // Safe currency formatting with defensive checks
+    try {
+      if (validAmount >= 1000000) {
+        return `OMR ${(validAmount / 1000000).toFixed(1)}M`;
+      } else if (validAmount >= 1000) {
+        return `OMR ${(validAmount / 1000).toFixed(1)}K`;
+      }
+      return `OMR ${validAmount.toLocaleString()}`;
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error formatting currency:', error, 'Value:', amount);
+      return 'OMR 0';
+    }
   };
 
   const calculateAverageContractValue = (): number => {
-    const activeContracts = allData.filter(c => c.status === 'Active' && c.contract_yearly_amount);
-    if (activeContracts.length === 0) return 0;
-    
-    const totalValue = activeContracts.reduce((sum, c) => sum + (c.contract_yearly_amount || 0), 0);
-    return totalValue / activeContracts.length;
+    try {
+      const activeContracts = allData.filter(c => c.status === 'Active' && c.contract_yearly_amount);
+      if (activeContracts.length === 0) return 0;
+      
+      const totalValue = activeContracts.reduce((sum, c) => {
+        const value = c.contract_yearly_amount;
+        // Defensive check for each contract value
+        if (value === undefined || value === null || isNaN(value)) {
+          console.log('ContractorTrackerDashboard: Invalid contract value found:', value, 'Contractor:', c.id);
+          return sum;
+        }
+        return sum + value;
+      }, 0);
+      
+      return totalValue / activeContracts.length;
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating average contract value:', error);
+      return 0;
+    }
   };
 
   const getUrgentExpiringCount = (): number => {
-    return (expiringContracts || []).filter(c => 
-      c.urgency_level === 'Critical' || c.urgency_level === 'High'
-    ).length;
+    try {
+      return (expiringContracts || []).filter(c => 
+        c.urgency_level === 'Critical' || c.urgency_level === 'High'
+      ).length;
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating urgent expiring count:', error);
+      return 0;
+    }
   };
 
   const getExpiringColor = (): 'green' | 'orange' | 'yellow' => {
-    const urgentCount = getUrgentExpiringCount();
-    if (urgentCount > 0) return 'orange';
-    if ((expiringContracts?.length || 0) > 0) return 'yellow';
-    return 'green';
+    try {
+      const urgentCount = getUrgentExpiringCount();
+      if (urgentCount > 0) return 'orange';
+      if ((expiringContracts?.length || 0) > 0) return 'yellow';
+      return 'green';
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error determining expiring color:', error);
+      return 'green';
+    }
   };
 
-  // Dynamic trend calculations based on historical data patterns
+  // Dynamic trend calculations with crash prevention
   const calculateContractTrend = () => {
-    // Calculate trend based on contract creation patterns
-    const recentContracts = allData.filter(c => {
-      const createdDate = new Date(c.created_at);
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      return createdDate >= thirtyDaysAgo;
-    }).length;
+    try {
+      // Calculate trend based on contract creation patterns
+      const recentContracts = allData.filter(c => {
+        try {
+          const createdDate = new Date(c.created_at);
+          if (isNaN(createdDate.getTime())) {
+            console.log('ContractorTrackerDashboard: Invalid created_at date:', c.created_at, 'Contractor:', c.id);
+            return false;
+          }
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          return createdDate >= thirtyDaysAgo;
+        } catch (error) {
+          console.log('ContractorTrackerDashboard: Error processing contract date:', error, 'Contractor:', c.id);
+          return false;
+        }
+      }).length;
 
-    const previousPeriodContracts = allData.filter(c => {
-      const createdDate = new Date(c.created_at);
-      const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      return createdDate >= sixtyDaysAgo && createdDate < thirtyDaysAgo;
-    }).length;
+      const previousPeriodContracts = allData.filter(c => {
+        try {
+          const createdDate = new Date(c.created_at);
+          if (isNaN(createdDate.getTime())) {
+            return false;
+          }
+          const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          return createdDate >= sixtyDaysAgo && createdDate < thirtyDaysAgo;
+        } catch (error) {
+          console.log('ContractorTrackerDashboard: Error processing previous period date:', error, 'Contractor:', c.id);
+          return false;
+        }
+      }).length;
 
-    if (previousPeriodContracts === 0) {
-      return recentContracts > 0 ? { value: 100, isPositive: true, period: 'vs last month' } : undefined;
+      if (previousPeriodContracts === 0) {
+        return recentContracts > 0 ? { value: 100, isPositive: true, period: 'vs last month' } : undefined;
+      }
+
+      const trendValue = Math.round(((recentContracts - previousPeriodContracts) / previousPeriodContracts) * 100);
+      return {
+        value: Math.abs(trendValue),
+        isPositive: trendValue >= 0,
+        period: 'vs last month'
+      };
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating contract trend:', error);
+      return { value: 0, isPositive: true, period: 'error' };
     }
-
-    const trendValue = Math.round(((recentContracts - previousPeriodContracts) / previousPeriodContracts) * 100);
-    return {
-      value: Math.abs(trendValue),
-      isPositive: trendValue >= 0,
-      period: 'vs last month'
-    };
   };
 
   const calculateActiveTrend = () => {
-    // Calculate trend based on active vs expired ratio changes
-    const activeRatio = (safeSummary?.active_contracts || 0) / Math.max((safeSummary?.total_contracts || 1), 1);
-    const targetRatio = 0.8; // Target 80% active contracts
-    
-    const performance = (activeRatio / targetRatio) * 100;
-    const trendValue = Math.round(performance - 100);
-    
-    return {
-      value: Math.abs(trendValue),
-      isPositive: trendValue >= 0,
-      period: 'vs target'
-    };
+    try {
+      // Calculate trend based on active vs expired ratio changes
+      const activeContracts = safeSummary?.active_contracts || 0;
+      const totalContracts = safeSummary?.total_contracts || 1;
+      
+      // Defensive check for valid numbers
+      if (typeof activeContracts !== 'number' || typeof totalContracts !== 'number' || isNaN(activeContracts) || isNaN(totalContracts)) {
+        console.log('ContractorTrackerDashboard: Invalid numbers for active trend calculation:', { activeContracts, totalContracts });
+        return { value: 0, isPositive: true, period: 'error' };
+      }
+      
+      const activeRatio = activeContracts / Math.max(totalContracts, 1);
+      const targetRatio = 0.8; // Target 80% active contracts
+      
+      const performance = (activeRatio / targetRatio) * 100;
+      const trendValue = Math.round(performance - 100);
+      
+      return {
+        value: Math.abs(trendValue),
+        isPositive: trendValue >= 0,
+        period: 'vs target'
+      };
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating active trend:', error);
+      return { value: 0, isPositive: true, period: 'error' };
+    }
   };
 
   const calculateExpiringTrend = () => {
-    // Calculate trend based on expiring contracts urgency
-    const criticalCount = (expiringContracts || []).filter(c => c.urgency_level === 'Critical').length;
-    const highCount = (expiringContracts || []).filter(c => c.urgency_level === 'High').length;
-    
-    if ((expiringContracts?.length || 0) === 0) {
-      return { value: 0, isPositive: true, period: 'all current' };
-    }
+    try {
+      // Calculate trend based on expiring contracts urgency
+      const criticalCount = (expiringContracts || []).filter(c => c.urgency_level === 'Critical').length;
+      const highCount = (expiringContracts || []).filter(c => c.urgency_level === 'High').length;
+      
+      if ((expiringContracts?.length || 0) === 0) {
+        return { value: 0, isPositive: true, period: 'all current' };
+      }
 
-    const urgencyScore = (criticalCount * 4 + highCount * 3) / (expiringContracts?.length || 1);
-    const trendValue = Math.round((4 - urgencyScore) * 25); // Convert to percentage
-    
-    return {
-      value: Math.abs(trendValue),
-      isPositive: urgencyScore < 2.5, // Lower urgency is positive
-      period: 'urgency level'
-    };
+      const urgencyScore = (criticalCount * 4 + highCount * 3) / (expiringContracts?.length || 1);
+      const trendValue = Math.round((4 - urgencyScore) * 25); // Convert to percentage
+      
+      return {
+        value: Math.abs(trendValue),
+        isPositive: urgencyScore < 2.5, // Lower urgency is positive
+        period: 'urgency level'
+      };
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating expiring trend:', error);
+      return { value: 0, isPositive: true, period: 'error' };
+    }
   };
 
   const calculateValueTrend = () => {
-    // Calculate trend based on contract values and renewals
-    const currentYearContracts = allData.filter(c => {
-      const startDate = new Date(c.start_date);
-      const currentYear = new Date().getFullYear();
-      return startDate.getFullYear() === currentYear;
-    });
+    try {
+      // Calculate trend based on contract values and renewals
+      const currentYearContracts = allData.filter(c => {
+        try {
+          const startDate = new Date(c.start_date);
+          if (isNaN(startDate.getTime())) {
+            console.log('ContractorTrackerDashboard: Invalid start_date:', c.start_date, 'Contractor:', c.id);
+            return false;
+          }
+          const currentYear = new Date().getFullYear();
+          return startDate.getFullYear() === currentYear;
+        } catch (error) {
+          console.log('ContractorTrackerDashboard: Error processing start_date:', error, 'Contractor:', c.id);
+          return false;
+        }
+      });
 
-    const previousYearContracts = allData.filter(c => {
-      const startDate = new Date(c.start_date);
-      const previousYear = new Date().getFullYear() - 1;
-      return startDate.getFullYear() === previousYear;
-    });
+      const previousYearContracts = allData.filter(c => {
+        try {
+          const startDate = new Date(c.start_date);
+          if (isNaN(startDate.getTime())) {
+            return false;
+          }
+          const previousYear = new Date().getFullYear() - 1;
+          return startDate.getFullYear() === previousYear;
+        } catch (error) {
+          console.log('ContractorTrackerDashboard: Error processing previous year start_date:', error, 'Contractor:', c.id);
+          return false;
+        }
+      });
 
-    const currentYearValue = currentYearContracts.reduce((sum, c) => sum + (c.contract_yearly_amount || 0), 0);
-    const previousYearValue = previousYearContracts.reduce((sum, c) => sum + (c.contract_yearly_amount || 0), 0);
+      const currentYearValue = currentYearContracts.reduce((sum, c) => {
+        const value = c.contract_yearly_amount;
+        if (value === undefined || value === null || isNaN(value)) {
+          console.log('ContractorTrackerDashboard: Invalid yearly amount for current year:', value, 'Contractor:', c.id);
+          return sum;
+        }
+        return sum + value;
+      }, 0);
+      
+      const previousYearValue = previousYearContracts.reduce((sum, c) => {
+        const value = c.contract_yearly_amount;
+        if (value === undefined || value === null || isNaN(value)) {
+          console.log('ContractorTrackerDashboard: Invalid yearly amount for previous year:', value, 'Contractor:', c.id);
+          return sum;
+        }
+        return sum + value;
+      }, 0);
 
-    if (previousYearValue === 0) {
-      return currentYearValue > 0 ? { value: 100, isPositive: true, period: 'vs last year' } : undefined;
+      if (previousYearValue === 0) {
+        return currentYearValue > 0 ? { value: 100, isPositive: true, period: 'vs last year' } : undefined;
+      }
+
+      const trendValue = Math.round(((currentYearValue - previousYearValue) / previousYearValue) * 100);
+      return {
+        value: Math.abs(trendValue),
+        isPositive: trendValue >= 0,
+        period: 'vs last year'
+      };
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error calculating value trend:', error);
+      return { value: 0, isPositive: true, period: 'error' };
     }
+  };
 
-    const trendValue = Math.round(((currentYearValue - previousYearValue) / previousYearValue) * 100);
-    return {
-      value: Math.abs(trendValue),
-      isPositive: trendValue >= 0,
-      period: 'vs last year'
-    };
+  // Safe string conversion utility functions
+  const safeToString = (value: any, defaultValue: string = '0'): string => {
+    try {
+      if (value === undefined || value === null) {
+        console.log('ContractorTrackerDashboard: safeToString called with undefined/null value');
+        return defaultValue;
+      }
+      
+      if (typeof value === 'number') {
+        if (isNaN(value)) {
+          console.log('ContractorTrackerDashboard: safeToString called with NaN value');
+          return defaultValue;
+        }
+        return value.toString();
+      }
+      
+      return String(value);
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error in safeToString:', error, 'Value:', value);
+      return defaultValue;
+    }
+  };
+
+  const safeToLocaleString = (value: any, defaultValue: string = '0'): string => {
+    try {
+      if (value === undefined || value === null) {
+        console.log('ContractorTrackerDashboard: safeToLocaleString called with undefined/null value');
+        return defaultValue;
+      }
+      
+      if (typeof value === 'number') {
+        if (isNaN(value)) {
+          console.log('ContractorTrackerDashboard: safeToLocaleString called with NaN value');
+          return defaultValue;
+        }
+        return value.toLocaleString();
+      }
+      
+      // Try to convert to number first
+      const numValue = Number(value);
+      if (isNaN(numValue)) {
+        console.log('ContractorTrackerDashboard: safeToLocaleString could not convert to number:', value);
+        return defaultValue;
+      }
+      
+      return numValue.toLocaleString();
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error in safeToLocaleString:', error, 'Value:', value);
+      return defaultValue;
+    }
+  };
+
+  const safeDateToLocaleString = (dateValue: any, defaultValue: string = 'Invalid Date'): string => {
+    try {
+      if (dateValue === undefined || dateValue === null) {
+        console.log('ContractorTrackerDashboard: safeDateToLocaleString called with undefined/null date');
+        return defaultValue;
+      }
+      
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        console.log('ContractorTrackerDashboard: safeDateToLocaleString received invalid date:', dateValue);
+        return defaultValue;
+      }
+      
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error('ContractorTrackerDashboard: Error in safeDateToLocaleString:', error, 'Date:', dateValue);
+      return defaultValue;
+    }
   };
 
   // Loading state
@@ -749,7 +1040,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
       >
         <KpiCard 
           title="Total Contracts"
-          value={(safeSummary?.total_contracts || 0).toString()}
+          value={safeToString(safeSummary?.total_contracts, '0')}
           subtitle={`${safeSummary?.active_contracts || 0} Active, ${safeSummary?.expired_contracts || 0} Expired`}
           color="blue"
           icon={FileText}
@@ -758,7 +1049,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
         />
         <KpiCard 
           title="Active Contracts"
-          value={(safeSummary?.active_contracts || 0).toString()}
+          value={safeToString(safeSummary?.active_contracts, '0')}
           subtitle={`${Math.round(((safeSummary?.active_contracts || 0) / Math.max((safeSummary?.total_contracts || 1), 1)) * 100)}% of total`}
           color="green"
           icon={CheckCircle}
@@ -767,7 +1058,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
         />
         <KpiCard 
           title="Expiring Soon"
-          value={(expiringContracts?.length || 0).toString()}
+          value={safeToString(expiringContracts?.length, '0')}
           subtitle={`Next 30 days (${getUrgentExpiringCount()} urgent)`}
           color={getExpiringColor()}
           icon={AlertTriangle}
@@ -840,10 +1131,10 @@ export const ContractorTrackerDashboard: React.FC = () => {
                       <StatusBadge status={contractor.status} />
                     </td>
                     <td className="px-4 py-2">{contractor.contract_type}</td>
-                    <td className="px-4 py-2">{new Date(contractor.end_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-2">{safeDateToLocaleString(contractor.end_date)}</td>
                     <td className="px-4 py-2">
                       {contractor.contract_yearly_amount 
-                        ? `OMR ${contractor.contract_yearly_amount.toLocaleString()}`
+                        ? formatCurrency(contractor.contract_yearly_amount)
                         : 'N/A'
                       }
                     </td>
