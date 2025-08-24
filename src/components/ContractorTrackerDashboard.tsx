@@ -48,31 +48,16 @@ export const ContractorTrackerDashboard: React.FC = () => {
   // Add error boundary state
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [isHookInitialized, setIsHookInitialized] = useState(false);
   
+  // IMPORTANT: All hooks must be called at the top level, never inside conditionals or try-catch blocks
   // Use the contractor data hook with real-time support
-  let contractorDataHook;
-  try {
-    contractorDataHook = useContractorData({
-      enableRealtime: true,
-      conflictResolution: 'prompt-user' // Show conflict resolution modal
-    });
-    console.log('ContractorTrackerDashboard: useContractorData hook initialized successfully');
-    setIsHookInitialized(true);
-  } catch (error) {
-    console.error('ContractorTrackerDashboard: Error initializing useContractorData hook:', error);
-    setHasError(true);
-    setErrorMessage(`Failed to initialize data hook: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    setIsHookInitialized(false);
-  }
-
-  // Additional safety check - ensure hook returned valid data
-  if (contractorDataHook && typeof contractorDataHook !== 'object') {
-    console.error('ContractorTrackerDashboard: Hook returned invalid data type:', typeof contractorDataHook);
-    setHasError(true);
-    setErrorMessage('Data hook returned invalid data type');
-    setIsHookInitialized(false);
-  }
+  const contractorDataHook = useContractorData({
+    enableRealtime: true,
+    conflictResolution: 'prompt-user' // Show conflict resolution modal
+  });
+  
+  // Toast notifications for errors - must be called at top level
+  const errorToastHook = useContractorErrorToast();
   
   // Destructure with safe fallbacks
   const {
@@ -112,9 +97,19 @@ export const ContractorTrackerDashboard: React.FC = () => {
     // Real-time functionality
     realtime = {
       isConnected: false,
+      isConnecting: false,
       eventCount: 0,
       lastEvent: null,
-      connectionStatus: 'disconnected'
+      connectionStatus: 'disconnected',
+      error: null,
+      connectionAttempts: 0,
+      maxRetries: 3,
+      canRetry: true,
+      reconnect: () => {},
+      disconnect: () => {},
+      getSubscriptionStats: () => ({}),
+      registerPendingOperation: () => {},
+      clearPendingOperation: () => {}
     },
     // Conflict resolution
     conflictData = null,
@@ -137,16 +132,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
     average_contract_duration: 0
   };
 
-  // Toast notifications for errors
-  let errorToastHook;
-  try {
-    errorToastHook = useContractorErrorToast();
-    console.log('ContractorTrackerDashboard: useContractorErrorToast hook initialized successfully');
-  } catch (error) {
-    console.error('ContractorTrackerDashboard: Error initializing useContractorErrorToast hook:', error);
-    // Don't fail the component if toast hook fails
-  }
-  
+  // Destructure toast functions with safe fallbacks
   const {
     showApiError = () => {},
     showNetworkError = () => {},
@@ -168,22 +154,30 @@ export const ContractorTrackerDashboard: React.FC = () => {
     }
   };
 
-  // Add useEffect for debugging
+  // Add useEffect for debugging and error handling
   useEffect(() => {
     console.log('ContractorTrackerDashboard: Component mounted');
     console.log('ContractorTrackerDashboard: Loading state:', loading);
     console.log('ContractorTrackerDashboard: Error state:', error);
     console.log('ContractorTrackerDashboard: Data count:', allData.length);
-    console.log('ContractorTrackerDashboard: Hook initialized:', isHookInitialized);
     console.log('ContractorTrackerDashboard: Summary:', summary);
+    
+    // Check for hook errors and set error state if needed
+    if (error) {
+      setHasError(true);
+      setErrorMessage(`Data hook error: ${error.message || 'Unknown error'}`);
+    }
     
     return () => {
       console.log('ContractorTrackerDashboard: Component unmounting');
     };
-  }, [loading, error, allData.length, isHookInitialized, summary]);
+  }, [loading, error, allData.length, summary]);
+
+  // Check if hooks are properly initialized and data is available
+  const isDataReady = !loading && !error && safeSummary && allData.length >= 0;
 
   // Show loading state while hook is initializing
-  if (!isHookInitialized) {
+  if (!isDataReady) {
     return (
       <div className="flex items-center justify-center min-h-[400px] p-4">
         <Card className="max-w-md w-full">
@@ -539,7 +533,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
                 fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
               }}
             >
-              {error}
+              {error?.message || 'An unknown error occurred'}
             </p>
             <Button onClick={handleRefresh} variant="primary" className="w-full sm:w-auto">
               <RefreshCw className="h-4 w-4 mr-2" />
