@@ -48,6 +48,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
   // Add error boundary state
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isHookInitialized, setIsHookInitialized] = useState(false);
   
   // Use the contractor data hook with real-time support
   let contractorDataHook;
@@ -57,24 +58,27 @@ export const ContractorTrackerDashboard: React.FC = () => {
       conflictResolution: 'prompt-user' // Show conflict resolution modal
     });
     console.log('ContractorTrackerDashboard: useContractorData hook initialized successfully');
+    setIsHookInitialized(true);
   } catch (error) {
     console.error('ContractorTrackerDashboard: Error initializing useContractorData hook:', error);
     setHasError(true);
     setErrorMessage(`Failed to initialize data hook: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    setIsHookInitialized(false);
+  }
+
+  // Additional safety check - ensure hook returned valid data
+  if (contractorDataHook && typeof contractorDataHook !== 'object') {
+    console.error('ContractorTrackerDashboard: Hook returned invalid data type:', typeof contractorDataHook);
+    setHasError(true);
+    setErrorMessage('Data hook returned invalid data type');
+    setIsHookInitialized(false);
   }
   
   // Destructure with safe fallbacks
   const {
     allData = [],
     filteredData = [],
-    summary = {
-      total_contracts: 0,
-      active_contracts: 0,
-      expired_contracts: 0,
-      pending_contracts: 0,
-      total_yearly_value: 0,
-      average_contract_duration: 0
-    },
+    summary,
     expiringContracts = [],
     contractsByService = [],
     loading = false,
@@ -109,8 +113,10 @@ export const ContractorTrackerDashboard: React.FC = () => {
     realtime = {
       isConnected: false,
       eventCount: 0,
-      lastEvent: null
+      lastEvent: null,
+      connectionStatus: 'disconnected'
     },
+    // Conflict resolution
     conflictData = null,
     hasConflict = false,
     resolveConflict = () => {},
@@ -121,6 +127,16 @@ export const ContractorTrackerDashboard: React.FC = () => {
     realtimeEventCount = 0
   } = contractorDataHook || {};
 
+  // Ensure summary has proper default values - add null check
+  const safeSummary = summary || {
+    total_contracts: 0,
+    active_contracts: 0,
+    expired_contracts: 0,
+    pending_contracts: 0,
+    total_yearly_value: 0,
+    average_contract_duration: 0
+  };
+
   // Toast notifications for errors
   let errorToastHook;
   try {
@@ -128,6 +144,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
     console.log('ContractorTrackerDashboard: useContractorErrorToast hook initialized successfully');
   } catch (error) {
     console.error('ContractorTrackerDashboard: Error initializing useContractorErrorToast hook:', error);
+    // Don't fail the component if toast hook fails
   }
   
   const {
@@ -157,11 +174,46 @@ export const ContractorTrackerDashboard: React.FC = () => {
     console.log('ContractorTrackerDashboard: Loading state:', loading);
     console.log('ContractorTrackerDashboard: Error state:', error);
     console.log('ContractorTrackerDashboard: Data count:', allData.length);
+    console.log('ContractorTrackerDashboard: Hook initialized:', isHookInitialized);
+    console.log('ContractorTrackerDashboard: Summary:', summary);
     
     return () => {
       console.log('ContractorTrackerDashboard: Component unmounting');
     };
-  }, [loading, error, allData.length]);
+  }, [loading, error, allData.length, isHookInitialized, summary]);
+
+  // Show loading state while hook is initializing
+  if (!isHookInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] p-4">
+        <Card className="max-w-md w-full">
+          <div className="text-center">
+            <RefreshCw className="h-12 w-12 mx-auto mb-4 animate-spin" />
+            <h3 
+              className="mb-2"
+              style={{ 
+                fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Initializing Dashboard
+            </h3>
+            <p 
+              className="mb-4"
+              style={{ 
+                fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                color: getThemeValue('colors.textSecondary', '#6B7280'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Setting up contractor data connection...
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   // Error boundary fallback
   if (hasError) {
@@ -205,11 +257,32 @@ export const ContractorTrackerDashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px] p-4">
         <Card className="max-w-md w-full">
-          <div className="text-center">
-            <HardHat className="h-12 w-12 mx-auto mb-4 text-blue-500" />
-            <h3 className="mb-2 text-lg font-semibold">Contractor Tracker</h3>
-            <p className="mb-4 text-gray-600">Initializing dashboard...</p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="text-center" style={{ color: getThemeValue('colors.status.error', '#ef4444') }}>
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+            <h3 
+              className="mb-2"
+              style={{ 
+                fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Data Hook Error
+            </h3>
+            <p 
+              className="mb-4"
+              style={{ 
+                fontSize: getThemeValue('typography.labelSize', '0.875rem'),
+                color: getThemeValue('colors.textSecondary', '#6B7280'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              Failed to initialize contractor data hook. Please refresh the page.
+            </p>
+            <Button onClick={() => window.location.reload()} variant="primary" className="w-full">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Page
+            </Button>
           </div>
         </Card>
       </div>
@@ -314,7 +387,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
   };
 
   const getUrgentExpiringCount = (): number => {
-    return expiringContracts.filter(c => 
+    return (expiringContracts || []).filter(c => 
       c.urgency_level === 'Critical' || c.urgency_level === 'High'
     ).length;
   };
@@ -322,7 +395,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
   const getExpiringColor = (): 'green' | 'orange' | 'yellow' => {
     const urgentCount = getUrgentExpiringCount();
     if (urgentCount > 0) return 'orange';
-    if (expiringContracts.length > 0) return 'yellow';
+    if ((expiringContracts?.length || 0) > 0) return 'yellow';
     return 'green';
   };
 
@@ -356,7 +429,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
 
   const calculateActiveTrend = () => {
     // Calculate trend based on active vs expired ratio changes
-    const activeRatio = summary.active_contracts / Math.max(summary.total_contracts, 1);
+    const activeRatio = (safeSummary?.active_contracts || 0) / Math.max((safeSummary?.total_contracts || 1), 1);
     const targetRatio = 0.8; // Target 80% active contracts
     
     const performance = (activeRatio / targetRatio) * 100;
@@ -371,14 +444,14 @@ export const ContractorTrackerDashboard: React.FC = () => {
 
   const calculateExpiringTrend = () => {
     // Calculate trend based on expiring contracts urgency
-    const criticalCount = expiringContracts.filter(c => c.urgency_level === 'Critical').length;
-    const highCount = expiringContracts.filter(c => c.urgency_level === 'High').length;
+    const criticalCount = (expiringContracts || []).filter(c => c.urgency_level === 'Critical').length;
+    const highCount = (expiringContracts || []).filter(c => c.urgency_level === 'High').length;
     
-    if (expiringContracts.length === 0) {
+    if ((expiringContracts?.length || 0) === 0) {
       return { value: 0, isPositive: true, period: 'all current' };
     }
 
-    const urgencyScore = (criticalCount * 4 + highCount * 3) / expiringContracts.length;
+    const urgencyScore = (criticalCount * 4 + highCount * 3) / (expiringContracts?.length || 1);
     const trendValue = Math.round((4 - urgencyScore) * 25); // Convert to percentage
     
     return {
@@ -418,7 +491,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
   };
 
   // Loading state
-  if (loading) {
+  if (loading || !safeSummary) {
     return (
       <div className="flex items-center justify-center min-h-[400px] p-4">
         <div className="text-center">
@@ -588,7 +661,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
             contractsByService={contractsByService}
             expiringContracts={expiringContracts}
             allContractors={allData}
-            summary={summary}
+            summary={safeSummary}
           />
         );
       default:
@@ -627,7 +700,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
                   color: getThemeValue('colors.primary', '#2D9CDB')
                 }}
               >
-                {summary.total_contracts}
+                {safeSummary?.total_contracts || 0}
               </span>
             </p>
             <p 
@@ -641,14 +714,14 @@ export const ContractorTrackerDashboard: React.FC = () => {
             </p>
           </div>
           
-          {expiringContracts.length > 0 && (
+          {(expiringContracts && expiringContracts.length > 0) && (
             <div className="flex items-center gap-3">
               <NotificationBadge
-                count={expiringContracts.length}
+                count={expiringContracts?.length || 0}
                 urgencyLevel={
-                  expiringContracts.some(c => c.urgency_level === 'Critical') ? 'Critical' :
-                  expiringContracts.some(c => c.urgency_level === 'High') ? 'High' :
-                  expiringContracts.some(c => c.urgency_level === 'Medium') ? 'Medium' :
+                  (expiringContracts || []).some(c => c.urgency_level === 'Critical') ? 'Critical' :
+                  (expiringContracts || []).some(c => c.urgency_level === 'High') ? 'High' :
+                  (expiringContracts || []).some(c => c.urgency_level === 'Medium') ? 'Medium' :
                   'Low'
                 }
               />
@@ -659,13 +732,13 @@ export const ContractorTrackerDashboard: React.FC = () => {
                   color: getThemeValue('colors.status.warning', '#f59e0b')
                 }}
               >
-                {expiringContracts.length} Expiring Soon
-                {expiringContracts.filter(c => c.urgency_level === 'Critical' || c.urgency_level === 'High').length > 0 && (
+                {expiringContracts?.length || 0} Expiring Soon
+                {(expiringContracts || []).filter(c => c.urgency_level === 'Critical' || c.urgency_level === 'High').length > 0 && (
                   <span 
                     className="ml-2"
                     style={{ color: getThemeValue('colors.status.error', '#ef4444') }}
                   >
-                    ({expiringContracts.filter(c => c.urgency_level === 'Critical' || c.urgency_level === 'High').length} urgent)
+                    ({(expiringContracts || []).filter(c => c.urgency_level === 'Critical' || c.urgency_level === 'High').length} urgent)
                   </span>
                 )}
               </span>
@@ -682,44 +755,44 @@ export const ContractorTrackerDashboard: React.FC = () => {
       >
         <KpiCard 
           title="Total Contracts"
-          value={summary.total_contracts.toString()}
-          subtitle={`${summary.active_contracts} Active, ${summary.expired_contracts} Expired`}
+          value={(safeSummary?.total_contracts || 0).toString()}
+          subtitle={`${safeSummary?.active_contracts || 0} Active, ${safeSummary?.expired_contracts || 0} Expired`}
           color="blue"
           icon={FileText}
           trend={calculateContractTrend()}
-          aria-label={`Total contracts: ${summary.total_contracts}. ${summary.active_contracts} active and ${summary.expired_contracts} expired.`}
+          aria-label={`Total contracts: ${safeSummary?.total_contracts || 0}. ${safeSummary?.active_contracts || 0} active and ${safeSummary?.expired_contracts || 0} expired.`}
         />
         <KpiCard 
           title="Active Contracts"
-          value={summary.active_contracts.toString()}
-          subtitle={`${Math.round((summary.active_contracts / Math.max(summary.total_contracts, 1)) * 100)}% of total`}
+          value={(safeSummary?.active_contracts || 0).toString()}
+          subtitle={`${Math.round(((safeSummary?.active_contracts || 0) / Math.max((safeSummary?.total_contracts || 1), 1)) * 100)}% of total`}
           color="green"
           icon={CheckCircle}
           trend={calculateActiveTrend()}
-          aria-label={`Active contracts: ${summary.active_contracts}, representing ${Math.round((summary.active_contracts / Math.max(summary.total_contracts, 1)) * 100)}% of total contracts.`}
+          aria-label={`Active contracts: ${safeSummary?.active_contracts || 0}, representing ${Math.round(((safeSummary?.active_contracts || 0) / Math.max((safeSummary?.total_contracts || 1), 1)) * 100)}% of total contracts.`}
         />
         <KpiCard 
           title="Expiring Soon"
-          value={expiringContracts.length.toString()}
+          value={(expiringContracts?.length || 0).toString()}
           subtitle={`Next 30 days (${getUrgentExpiringCount()} urgent)`}
           color={getExpiringColor()}
           icon={AlertTriangle}
           trend={calculateExpiringTrend()}
-          aria-label={`Contracts expiring soon: ${expiringContracts.length} in the next 30 days, with ${getUrgentExpiringCount()} marked as urgent.`}
+          aria-label={`Contracts expiring soon: ${expiringContracts?.length || 0} in the next 30 days, with ${getUrgentExpiringCount()} marked as urgent.`}
         />
         <KpiCard 
           title="Total Value"
-          value={formatCurrency(summary.total_yearly_value)}
+          value={formatCurrency(safeSummary?.total_yearly_value || 0)}
           subtitle={`Avg: ${formatCurrency(calculateAverageContractValue())}`}
           color="purple"
           icon={DollarSign}
           trend={calculateValueTrend()}
-          aria-label={`Total contract value: ${formatCurrency(summary.total_yearly_value)} annually, with an average of ${formatCurrency(calculateAverageContractValue())} per contract.`}
+          aria-label={`Total contract value: ${formatCurrency(safeSummary?.total_yearly_value || 0)} annually, with an average of ${formatCurrency(calculateAverageContractValue())} per contract.`}
         />
       </section>
 
       {/* Expiring Contracts Notifications */}
-      {expiringContracts.length > 0 && (
+      {(expiringContracts && expiringContracts.length > 0) && (
         <ExpirationNotifications
           expiringContracts={expiringContracts}
           onViewContract={handleViewContractFromNotification}
@@ -727,64 +800,74 @@ export const ContractorTrackerDashboard: React.FC = () => {
       )}
 
       {/* Recent Contracts Table Preview */}
-      <Card>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <h3 
-            className="flex items-center gap-2 dark:text-white"
-            style={{ 
-              fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
-              fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
-              color: getThemeValue('colors.textPrimary', '#111827'),
-              fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
-            }}
-          >
-            <HardHat className="h-5 w-5" style={{ color: getThemeValue('colors.primary', '#2D9CDB') }} />
-            Recent Contracts
-          </h3>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setActiveSubModule('Contractors')}
-            className="w-fit"
-          >
-            View All
-          </Button>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
-              <tr>
-                <th className="px-4 py-3">Contractor</th>
-                <th className="px-4 py-3">Service</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">End Date</th>
-                <th className="px-4 py-3">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allData.slice(0, 5).map((contractor) => (
-                <tr key={contractor.id} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                  <td className="px-4 py-2 font-medium">{contractor.contractor_name}</td>
-                  <td className="px-4 py-2 max-w-xs truncate">{contractor.service_provided}</td>
-                  <td className="px-4 py-2">
-                    <StatusBadge status={contractor.status} />
-                  </td>
-                  <td className="px-4 py-2">{contractor.contract_type}</td>
-                  <td className="px-4 py-2">{new Date(contractor.end_date).toLocaleDateString()}</td>
-                  <td className="px-4 py-2">
-                    {contractor.contract_yearly_amount 
-                      ? `OMR ${contractor.contract_yearly_amount.toLocaleString()}`
-                      : 'N/A'
-                    }
-                  </td>
+      {(allData && allData.length > 0) ? (
+        <Card>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <h3 
+              className="flex items-center gap-2 dark:text-white"
+              style={{ 
+                fontSize: getThemeValue('typography.fontSize.lg', '1.125rem'),
+                fontWeight: getThemeValue('typography.fontWeight.semibold', '600'),
+                color: getThemeValue('colors.textPrimary', '#111827'),
+                fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
+              }}
+            >
+              <HardHat className="h-5 w-5" style={{ color: getThemeValue('colors.primary', '#2D9CDB') }} />
+              Recent Contracts
+            </h3>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveSubModule('Contractors')}
+              className="w-fit"
+            >
+              View All
+            </Button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
+                <tr>
+                  <th className="px-4 py-3">Contractor</th>
+                  <th className="px-4 py-3">Service</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">End Date</th>
+                  <th className="px-4 py-3">Value</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </thead>
+              <tbody>
+                {(allData || []).slice(0, 5).map((contractor) => (
+                  <tr key={contractor.id} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
+                    <td className="px-4 py-2 font-medium">{contractor.contractor_name}</td>
+                    <td className="px-4 py-2 max-w-xs truncate">{contractor.service_provided}</td>
+                    <td className="px-4 py-2">
+                      <StatusBadge status={contractor.status} />
+                    </td>
+                    <td className="px-4 py-2">{contractor.contract_type}</td>
+                    <td className="px-4 py-2">{new Date(contractor.end_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-2">
+                      {contractor.contract_yearly_amount 
+                        ? `OMR ${contractor.contract_yearly_amount.toLocaleString()}`
+                        : 'N/A'
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">
+              No contractor data available. Please check your connection or refresh the page.
+            </p>
+          </div>
+        </Card>
+      )}
     </div>
   );
 
@@ -939,7 +1022,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
         isOpen={isExportModalOpen}
         onClose={handleCloseModals}
         contractors={allData}
-        summary={summary}
+        summary={safeSummary}
         expiringContracts={expiringContracts}
         contractsByService={contractsByService}
         currentFilters={filters}
