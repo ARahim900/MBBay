@@ -8,6 +8,7 @@ import { EnhancedElectricityModule } from './src/components/EnhancedElectricityM
 import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 import { FirefightingDashboard } from './src/components/FirefightingDashboard';
+import { ContractorTrackerDashboard } from './src/components/ContractorTrackerDashboard';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
 import { theme } from './src/lib/theme';
@@ -499,83 +500,7 @@ const HVACModule = () => {
 
 
 // -- CONTRACTOR TRACKER MODULE --
-const contractorKpis = [
-    { title: "TOTAL CONTRACTS", value: "20", subValue: "All registered contracts", icon: HardHat },
-    { title: "ACTIVE CONTRACTS", value: "11", subValue: "Currently ongoing", icon: CheckCircle },
-    { title: "EXPIRED CONTRACTS", value: "9", subValue: "Past due date", icon: XCircle },
-    { title: "TOTAL ANNUAL VALUE", value: "467,548 OMR", subValue: "Sum of yearly values", icon: TrendingUp },
-];
-
-const contractorData = [
-    { contractor: "Advanced Technology and Projects Company", service: "BMS Non-Comprehensive Annual Maintenance", status: "Expired", type: "PO", start: "Mar 26, 2023", end: "Mar 25, 2024", value: "N/A", note: "N/A" },
-    { contractor: "Al Naba Services LLC", service: "Garbage Removal Services", status: "Expired", type: "Contract", start: "Apr 2, 2023", end: "Apr 1, 2024", value: "N/A", note: "N/A" },
-    { contractor: "Muscat Electronics LLC", service: "Daikin AC Chillers Gala Maintenance Services", status: "Expired", type: "Contract", start: "Mar 26, 2023", end: "Apr 25, 2024", value: "N/A", note: "Nearing expiration, review for r..." },
-    { contractor: "Celar Water", service: "Comprehensive STP Operation and Maintenance", status: "Expired", type: "Contract", start: "Jan 16, 2021", end: "Jan 15, 2025", value: "N/A", note: "Transitioned to OWATCO before..." },
-    { contractor: "COMO", service: "Facility Management (FM)", status: "Expired", type: "Contract", start: "Mar 1, 2022", end: "Feb 28, 2025", value: "N/A", note: "Transitioned to Kahat before c..." },
-    { contractor: "Oman Pumps Manufacturing Co.", service: "Supply, Installation, and Commissioning of Pumps", status: "Expired", type: "Contract", start: "Jul 21, 2020", end: "Jul 20, 2025", value: "N/A", note: "N/A" },
-    { contractor: "Bahwan Engineering Company LLC", service: "Maintenance of Fire Alarm & Fire Fighting Equipment", status: "Active", type: "Contract", start: "Nov 1, 2024", end: "Oct 31, 2025", value: "8,925.00", note: "Soon Expires" },
-    { contractor: "KONE Assarain LLC", service: "Lift Maintenance Services", status: "Active", type: "Contract", start: "Jan 1, 2024", end: "Dec 31, 2025", value: "11,550.00", note: "" },
-    { contractor: "Iron mountain ARAMEX", service: "Offsite record storage", status: "Active", type: "Contract", start: "Jan 1, 2025", end: "Dec 31, 2025", value: "N/A", note: "" },
-    { contractor: "Gulf Expert", service: "Chillers, BMS & Pressurization Units", status: "Active", type: "Contract", start: "Jun 3, 2025", end: "Jun 2, 2026", value: "7,234.50", note: "" },
-];
-
-const ContractorModule = () => {
-    const StatusBadge = ({ status }) => {
-        const colors = { Active: 'bg-green-100 text-green-800', Expired: 'bg-red-100 text-red-800' };
-        return <span className={`px-2 py-1 text-xs rounded-full ${colors[status] || 'bg-gray-100'}`}>{status}</span>;
-    };
-
-    return (
-        <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-[#4E4456] dark:text-white">Contractor Tracker</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {contractorKpis.map(kpi => (
-                     <Card key={kpi.title} className="flex items-center gap-4">
-                        <kpi.icon className="w-8 h-8 text-gray-500" />
-                        <div>
-                            <p className="text-sm text-gray-500">{kpi.title}</p>
-                            <p className="font-bold text-xl text-[#4E4456] dark:text-white">{kpi.value}</p>
-                            <p className="text-xs text-gray-400">{kpi.subValue}</p>
-                        </div>
-                    </Card>
-                ))}
-            </div>
-            <Card>
-                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <input type="text" placeholder="Search Contractor/Service..." className="p-2 border rounded-md dark:bg-white/10 col-span-1 md:col-span-2" />
-                    <select className="p-2 border rounded-md dark:bg-white/10"><option>All Statuses</option></select>
-                    <button className="text-gray-500 hover:text-gray-800 flex items-center gap-1 transition-transform duration-200 hover:rotate-90"><RefreshCw className="w-4 h-4" /> Reset</button>
-                </div>
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-white/5">
-                            <tr>{['Contractor', 'Service Provided', 'Status', 'Type', 'Start Date', 'End Date', 'Annual Value (OMR)', 'Note', 'Actions'].map(h => <th key={h} className="px-4 py-3">{h}</th>)}</tr>
-                        </thead>
-                         <tbody>
-                            {contractorData.map((item, idx) => (
-                                <tr key={idx} className="border-b dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
-                                    <td className="px-4 py-2 font-medium">{item.contractor}</td>
-                                    <td className="px-4 py-2">{item.service}</td>
-                                    <td className="px-4 py-2"><StatusBadge status={item.status} /></td>
-                                    <td className="px-4 py-2">{item.type}</td>
-                                    <td className="px-4 py-2">{item.start}</td>
-                                    <td className="px-4 py-2">{item.end}{item.note === "Soon Expires" && <p className="text-xs text-orange-500">Soon Expires</p>}</td>
-                                    <td className="px-4 py-2">{item.value}</td>
-                                    <td className="px-4 py-2 text-xs text-gray-500">{item.note !== "Soon Expires" ? item.note : ''}</td>
-                                    <td className="px-4 py-2"><button className="p-1 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"><ChevronRight className="w-4 h-4" /></button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                 <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-                    <p>Page 1 of 2</p>
-                    <div><button className="px-3 py-1 border rounded-md hover:bg-gray-100">Previous</button><button className="px-3 py-1 border rounded-md hover:bg-gray-100 ml-2">Next</button></div>
-                </div>
-            </Card>
-        </div>
-    );
-};
+// Now using ContractorTrackerDashboard component with Supabase integration
 
 // -- STP PLANT MODULE --
 // -- FIREFIGHTING MODULE --
@@ -777,7 +702,7 @@ export default function App() {
       case 'Electricity': return <ElectricityModule />;
       case 'HVAC System': return <HVACModule />;
       case 'Firefighting & Alarm': return <FirefightingModule />;
-      case 'Contractor Tracker': return <ContractorModule />;
+      case 'Contractor Tracker': return <ContractorTrackerDashboard />;
       case 'STP Plant': return <STPPlantModule />;
       default: return <WaterModule />; // Default to Water
     }

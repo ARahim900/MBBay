@@ -2,8 +2,10 @@
 export { Card } from './Card';
 export { KpiCard } from './KpiCard';
 export { Button } from './Button';
+export { Modal } from './Modal';
 export { Navigation, Breadcrumb } from './Navigation';
 export { Table } from './Table';
+export { StatusBadge } from './StatusBadge';
 export { Sidebar } from './Sidebar';
 export { Slider, ModernDateRangeSlider, CompactRangeSlider } from './Slider';
 export { 

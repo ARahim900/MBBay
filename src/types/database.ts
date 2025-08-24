@@ -222,6 +222,75 @@ export interface Database {
           resolution_notes?: string;
         };
       };
+      contractor_tracker: {
+        Row: {
+          id: number;
+          contractor_name: string;
+          service_provided: string;
+          status: 'Active' | 'Expired' | 'Pending';
+          contract_type: 'Contract' | 'PO';
+          start_date: string;
+          end_date: string;
+          contract_monthly_amount: number | null;
+          contract_yearly_amount: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          contractor_name: string;
+          service_provided: string;
+          status: 'Active' | 'Expired' | 'Pending';
+          contract_type: 'Contract' | 'PO';
+          start_date: string;
+          end_date: string;
+          contract_monthly_amount?: number | null;
+          contract_yearly_amount?: number | null;
+          notes?: string | null;
+        };
+        Update: {
+          contractor_name?: string;
+          service_provided?: string;
+          status?: 'Active' | 'Expired' | 'Pending';
+          contract_type?: 'Contract' | 'PO';
+          start_date?: string;
+          end_date?: string;
+          contract_monthly_amount?: number | null;
+          contract_yearly_amount?: number | null;
+          notes?: string | null;
+        };
+      };
+      contractor_tracker_summary: {
+        Row: {
+          total_contracts: number;
+          active_contracts: number;
+          expired_contracts: number;
+          pending_contracts: number;
+          total_yearly_value: number;
+          average_contract_duration: number;
+        };
+      };
+      contracts_expiring_soon: {
+        Row: {
+          id: number;
+          contractor_name: string;
+          service_provided: string;
+          end_date: string;
+          days_until_expiry: number;
+          contract_yearly_amount: number | null;
+          urgency_level: 'Critical' | 'High' | 'Medium' | 'Low';
+        };
+      };
+      contracts_by_service: {
+        Row: {
+          service_category: string;
+          contract_count: number;
+          total_value: number;
+          average_value: number;
+          active_count: number;
+          expired_count: number;
+        };
+      };
     };
   };
 }
