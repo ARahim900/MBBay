@@ -11,7 +11,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ContractorTrackerDashboard } from '../components/ContractorTrackerDashboard';
 import { ContractorAPI } from '../lib/contractor-api';
-import { useContractorData } from '../../hooks/useContractorData';
+import { useContractorData } from '../hooks/useContractorData';
 import { ContractorCache } from '../utils/contractor-cache';
 import { ContractorErrorHandler } from '../utils/contractor-error-handler';
 import type { Contractor, CreateContractorData, UpdateContractorData, ContractorFilters } from '../types/contractor';

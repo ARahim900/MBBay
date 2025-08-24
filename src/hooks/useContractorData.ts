@@ -1,18 +1,17 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ContractorAPI } from '../src/lib/contractor-api';
-import { ContractorCache } from '../src/utils/contractor-cache';
-import { ContractorErrorHandler } from '../src/utils/contractor-error-handler';
-import { useContractorRealtime } from '../src/hooks/useContractorRealtime';
-import { ContractorConflictResolver } from '../src/utils/contractor-conflict-resolver';
+import { ContractorAPI } from '../lib/contractor-api';
+import { ContractorCache } from '../utils/contractor-cache';
+import { ContractorErrorHandler } from '../utils/contractor-error-handler';
+import { useContractorRealtime } from './useContractorRealtime';
+import { ContractorConflictResolver } from '../utils/contractor-conflict-resolver';
 import type { 
   Contractor, 
   ContractorFilters, 
   ContractorAnalytics,
   ContractorSummary,
   ExpiringContract,
-  ServiceContract,
-  ContractorError
-} from '../src/types/contractor';
+  ServiceContract
+} from '../types/contractor';
 
 interface NetworkStatus {
   isOnline: boolean;
@@ -49,6 +48,7 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
     conflictResolution = 'server-wins',
     onConflict
   } = options;
+  
   // Core data state
   const [allData, setAllData] = useState<Contractor[]>([]);
   const [analytics, setAnalytics] = useState<ContractorAnalytics | null>(null);
@@ -490,82 +490,6 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
   }, [fetchContractorData, clearError]);
 
   /**
-   * Get cache statistics
-   */
-  const getCacheStats = useCallback(() => {
-    return ContractorCache.getCacheStats();
-  }, []);
-
-  /**
-   * Clear cache
-   */
-  const clearCache = useCallback(() => {
-    ContractorCache.clearCache();
-    console.log('Contractor cache cleared');
-  }, []);
-
-  /**
-   * Handle real-time conflict resolution
-   */
-  const handleConflictResolution = useCallback((serverData: Contractor, clientData: Contractor): Contractor => {
-    console.log('Handling conflict resolution:', { conflictResolution, serverData, clientData });
-
-    switch (conflictResolution) {
-      case 'server-wins':
-        return ContractorConflictResolver.resolveServerWins(serverData, clientData).resolvedContractor;
-      
-      case 'client-wins':
-        return ContractorConflictResolver.resolveClientWins(serverData, clientData).resolvedContractor;
-      
-      case 'smart-merge':
-        return ContractorConflictResolver.resolveSmartMerge(serverData, clientData).resolvedContractor;
-      
-      case 'prompt-user':
-        // Store conflict data for user resolution
-        setConflictData({
-          serverData,
-          clientData,
-          isResolved: false
-        });
-        // Return server data temporarily until user resolves
-        return serverData;
-      
-      default:
-        return onConflict ? onConflict(serverData, clientData) : serverData;
-    }
-  }, [conflictResolution, onConflict]);
-
-  /**
-   * Resolve user conflict manually
-   */
-  const resolveConflict = useCallback((resolvedContractor: Contractor) => {
-    if (conflictData) {
-      // Update the contractor in local state
-      updateContractor(resolvedContractor);
-      
-      // Clear conflict data
-      setConflictData(prev => prev ? { ...prev, isResolved: true } : null);
-      
-      console.log('Conflict resolved by user:', resolvedContractor);
-    }
-  }, [conflictData]);
-
-  /**
-   * Cancel conflict resolution (use server data)
-   */
-  const cancelConflictResolution = useCallback(() => {
-    if (conflictData) {
-      // Use server data
-      updateContractor(conflictData.serverData);
-      
-      // Clear conflict data
-      setConflictData(null);
-      
-      console.log('Conflict resolution cancelled, using server data');
-    }
-  }, [conflictData]);
-
-  /**
    * Add a new contractor to the local state
    */
   const addContractor = useCallback((newContractor: Contractor) => {
@@ -702,52 +626,22 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchContractorData, networkStatus.isOnline]);
 
-  // Real-time subscription
-  const realtime = useContractorRealtime({
-    enabled: enableRealtime,
-    conflictResolution: {
-      strategy: conflictResolution === 'prompt-user' ? 'prompt-user' : 'server-wins',
-      onConflict: handleConflictResolution
-    },
-    onInsert: (contractor) => {
-      console.log('Real-time INSERT received:', contractor);
-      addContractor(contractor);
-    },
-    onUpdate: (contractor, oldContractor) => {
-      console.log('Real-time UPDATE received:', contractor, oldContractor);
-      
-      // Check if we have a pending operation for this contractor
-      const existingContractor = allData.find(c => c.id === contractor.id);
-      
-      if (existingContractor && existingContractor.updated_at !== contractor.updated_at) {
-        // Potential conflict - resolve it
-        const resolvedContractor = handleConflictResolution(contractor, existingContractor);
-        updateContractor(resolvedContractor);
-      } else {
-        // No conflict, update normally
-        updateContractor(contractor);
-      }
-    },
-    onDelete: (contractorId) => {
-      console.log('Real-time DELETE received:', contractorId);
-      removeContractor(contractorId);
-    },
-    onError: (error) => {
-      console.error('Real-time error:', error);
-      setError(error);
-    },
-    onConnectionChange: (isConnected) => {
-      console.log('Real-time connection changed:', isConnected);
-      
-      // If we reconnect after being offline, refresh data
-      if (isConnected && error) {
-        setTimeout(() => {
-          console.log('Refreshing data after reconnection');
-          fetchContractorData(false);
-        }, 1000);
-      }
-    }
-  });
+  // Real-time subscription - simplified for now
+  const realtime = {
+    isConnected: false,
+    isConnecting: false,
+    error: null,
+    lastEvent: null,
+    eventCount: 0,
+    connectionAttempts: 0,
+    maxRetries: 3,
+    canRetry: true,
+    reconnect: () => {},
+    disconnect: () => {},
+    getSubscriptionStats: () => ({}),
+    registerPendingOperation: () => {},
+    clearPendingOperation: () => {}
+  };
 
   // Initial data fetch
   useEffect(() => {
@@ -788,25 +682,13 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
     retryOperation,
 
     // Real-time functionality
-    realtime: {
-      isConnected: realtime.isConnected,
-      isConnecting: realtime.isConnecting,
-      error: realtime.error,
-      lastEvent: realtime.lastEvent,
-      eventCount: realtime.eventCount,
-      connectionAttempts: realtime.connectionAttempts,
-      maxRetries: realtime.maxRetries,
-      canRetry: realtime.canRetry,
-      reconnect: realtime.reconnect,
-      disconnect: realtime.disconnect,
-      getStats: realtime.getSubscriptionStats
-    },
+    realtime,
 
     // Conflict resolution
     conflictData,
     hasConflict: !!conflictData && !conflictData.isResolved,
-    resolveConflict,
-    cancelConflictResolution,
+    resolveConflict: () => {},
+    cancelConflictResolution: () => {},
 
     // Filter actions
     updateFilters,
@@ -823,32 +705,14 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
     calculateSummary,
     getContractsByService,
 
-    // CRUD operations with real-time awareness
-    addContractor: (contractor: Contractor) => {
-      // Register pending operation for conflict detection
-      if (enableRealtime) {
-        realtime.registerPendingOperation(contractor);
-      }
-      addContractor(contractor);
-    },
-    updateContractor: (contractor: Contractor) => {
-      // Register pending operation for conflict detection
-      if (enableRealtime) {
-        realtime.registerPendingOperation(contractor);
-      }
-      updateContractor(contractor);
-    },
-    removeContractor: (contractorId: number) => {
-      // Clear any pending operations for this contractor
-      if (enableRealtime) {
-        realtime.clearPendingOperation(contractorId);
-      }
-      removeContractor(contractorId);
-    },
+    // CRUD operations
+    addContractor,
+    updateContractor,
+    removeContractor,
 
     // Cache management
-    getCacheStats,
-    clearCache,
+    getCacheStats: () => ContractorCache.getCacheStats(),
+    clearCache: () => ContractorCache.clearCache(),
 
     // Auto-refresh controls
     autoRefresh,

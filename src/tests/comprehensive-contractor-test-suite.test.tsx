@@ -13,7 +13,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ContractorAPI } from '../lib/contractor-api';
-import { useContractorData } from '../../hooks/useContractorData';
+import { useContractorData } from '../hooks/useContractorData';
 import { ContractorTrackerDashboard } from '../components/ContractorTrackerDashboard';
 import { ContractorErrorHandler } from '../utils/contractor-error-handler';
 import { ContractorCache } from '../utils/contractor-cache';

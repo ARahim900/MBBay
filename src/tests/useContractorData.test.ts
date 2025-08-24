@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useContractorData } from '../../hooks/useContractorData';
+import { useContractorData } from '../hooks/useContractorData';
 import { ContractorAPI } from '../lib/contractor-api';
 import { ContractorCache } from '../utils/contractor-cache';
 import type { Contractor, ContractorAnalytics } from '../types/contractor';

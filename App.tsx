@@ -9,6 +9,7 @@ import { EnhancedHVACModule } from './src/components/EnhancedHVACModule';
 import { EnhancedSTPModule } from './src/components/EnhancedSTPModule';
 import { FirefightingDashboard } from './src/components/FirefightingDashboard';
 import { ContractorTrackerDashboard } from './src/components/ContractorTrackerDashboard';
+import { ToastProvider } from './src/components/contractor/ErrorToast';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
 import { theme } from './src/lib/theme';
@@ -708,19 +709,21 @@ export default function App() {
     }
   };
   return (
-    <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
-      <Sidebar />
-      <Header />
-      
-      
-      {/* Main content area that adapts to sidebar width */}
-      <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
-        isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
-      }`}>
-        <main className="p-6">
-          {renderModule()}
-        </main>
+    <ToastProvider>
+      <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
+        <Sidebar />
+        <Header />
+        
+        
+        {/* Main content area that adapts to sidebar width */}
+        <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
+          isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+        }`}>
+          <main className="p-6">
+            {renderModule()}
+          </main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }

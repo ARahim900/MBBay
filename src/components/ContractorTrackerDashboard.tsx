@@ -24,7 +24,7 @@ import { DeleteContractorModal } from './contractor/DeleteContractorModal';
 import { ExportModal } from './contractor/ExportModal';
 import { NotificationCenter } from './contractor/NotificationCenter';
 import { ExpirationNotifications, NotificationBadge } from './contractor/ExpirationNotifications';
-import { useContractorData } from '../../hooks/useContractorData';
+import { useContractorData } from '../hooks/useContractorData';
 import { NetworkStatusIndicator } from './contractor/NetworkStatusIndicator';
 import { RetryHandler } from './contractor/RetryHandler';
 import { useContractorErrorToast } from './contractor/ErrorToast';
