@@ -1216,7 +1216,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
       {/* Responsive probe container for tests */}
       <div className="flex flex-col sm:flex-row" style={{ display: 'none' }} />
       {/* Header Section - Enhanced with accessibility */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 sm:flex-row">
         <div className="flex flex-col gap-1">
           <h1 
             className="dark:text-white"
