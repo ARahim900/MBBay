@@ -137,8 +137,9 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
 
       // In test mode, honor cache first to satisfy caching tests; then fetch
       if (isTestMode) {
-        const cachedContractors = ContractorCache.isCacheValid() ? ContractorCache.getContractors() : null;
-        const cachedAnalytics = ContractorCache.isCacheValid() ? ContractorCache.getAnalytics() : null;
+        const isValid = ContractorCache.isCacheValid();
+        const cachedContractors = isValid ? ContractorCache.getContractors() : null;
+        const cachedAnalytics = isValid ? ContractorCache.getAnalytics() : null;
         if (useCache && cachedContractors && cachedAnalytics) {
           setAllData(cachedContractors);
           setAnalytics(cachedAnalytics);
@@ -148,6 +149,7 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
           setRetryState(prev => ({ ...prev, count: 0, canRetry: true, isRetrying: false }));
           return;
         }
+        // If cache not valid, fetch and then mark cache valid timestamp
         const [contractors, analyticsData] = await Promise.all([
           ContractorAPI.getAllContractors(),
           ContractorAPI.getAnalytics()
