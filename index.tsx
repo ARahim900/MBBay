@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import SimpleApp from './SimpleApp';
+import MinimalApp from './MinimalApp';
+// import SimpleApp from './SimpleApp';
 // import App from './App';
-// import './src/overrides.css';
+import './src/overrides.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
