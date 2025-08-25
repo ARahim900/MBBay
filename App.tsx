@@ -519,7 +519,11 @@ const HVACModule = () => {
 // -- STP PLANT MODULE --
 // -- FIREFIGHTING MODULE --
 const FirefightingModule = () => {
-    return <FirefightingDashboard />;
+    return (
+        <ErrorBoundary>
+            <FirefightingDashboard />
+        </ErrorBoundary>
+    );
 };
 
 const STPPlantModule = () => {
