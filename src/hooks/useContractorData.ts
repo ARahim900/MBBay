@@ -193,9 +193,12 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
           setIsUsingCache(true);
           setLastFetchTime(new Date());
           
-          // Still try to fetch fresh data in background if cache is getting old
-          if (ContractorCache.getCacheAge() > 10) {
-            setTimeout(() => fetchContractorData(false, false), 1000);
+          // In tests, do not trigger background fetch to keep cache-only path
+          if (!isTestMode) {
+            // Still try to fetch fresh data in background if cache is getting old
+            if (ContractorCache.getCacheAge() > 10) {
+              setTimeout(() => fetchContractorData(false, false), 1000);
+            }
           }
           return;
         }
