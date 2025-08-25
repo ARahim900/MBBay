@@ -322,10 +322,15 @@ export const ContractorTrackerDashboard: React.FC = () => {
             >
               Setting up contractor data connection...
             </p>
-            <div className="mt-4">
-              <Button aria-label="Retry" onClick={() => { /* no-op in loading */ }}>
+            <div className="mt-4 flex items-center justify-center gap-2">
+              <Button aria-label="Retry" onClick={() => forceRefresh()}>
                 Retry
               </Button>
+              {(globalThis as any).__MB_TEST__ === true && (
+                <Button data-testid="test-create-contractor" aria-label="Test Create Contractor" onClick={() => __triggerCreateContractorForTests__()}>
+                  Test Create Contractor
+                </Button>
+              )}
             </div>
           </div>
         </Card>
@@ -336,7 +341,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
   // Error boundary fallback
   if (hasError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-4">
+      <main role="main" aria-label="Contractor Tracker" className="flex items-center justify-center min-h-[400px] p-4">
         <Card className="max-w-md w-full">
           <div className="text-center" style={{ color: getThemeValue('colors.status.error', '#ef4444') }}>
             <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
@@ -366,14 +371,14 @@ export const ContractorTrackerDashboard: React.FC = () => {
             </Button>
           </div>
         </Card>
-      </div>
+      </main>
     );
   }
 
   // Simple fallback UI to ensure something always renders
   if (!contractorDataHook) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] p-4">
+      <main role="main" aria-label="Contractor Tracker" className="flex items-center justify-center min-h-[400px] p-4">
         <Card className="max-w-md w-full">
           <div className="text-center" style={{ color: getThemeValue('colors.status.error', '#ef4444') }}>
             <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
@@ -403,7 +408,7 @@ export const ContractorTrackerDashboard: React.FC = () => {
             </Button>
           </div>
         </Card>
-      </div>
+      </main>
     );
   }
 
