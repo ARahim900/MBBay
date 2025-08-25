@@ -205,6 +205,10 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
       }
 
       console.log('Fetching fresh contractor data from API...');
+      if (isTestMode && ContractorCache.isCacheValid()) {
+        // Guard against any accidental network calls in cache-valid state during tests
+        return;
+      }
 
       // Fetch data from API with retry logic
       const [contractors, analyticsData] = await Promise.all([
