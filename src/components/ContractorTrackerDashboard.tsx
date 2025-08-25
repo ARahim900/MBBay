@@ -269,10 +269,10 @@ export const ContractorTrackerDashboard: React.FC = () => {
     return () => {
       console.log('ContractorTrackerDashboard: Component unmounting');
     };
-  }, [loading, error, allData.length, summary, safeSummary, expiringContracts, isDataReady]);
+  }, []);
 
   // Check if hooks are properly initialized and data is available
-  const isDataReady = !loading && !error && safeSummary && allData.length >= 0;
+  const isDataReady = !loading && !error && safeSummary;
 
   // Show loading state while hook is initializing
   if (!isDataReady) {
