@@ -13,6 +13,6 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <SimpleApp />
+    <MinimalApp />
   </React.StrictMode>
 );
