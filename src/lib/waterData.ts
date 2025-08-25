@@ -5,21 +5,33 @@ export const fetchWaterMeters = async (): Promise<WaterMeter[]> => {
   console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
   console.log('Supabase Key (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
   
-  const { data, error } = await supabase
-    .from('water_meters')
-    .select('*')
-    .order('id')
+  try {
+    const { data, error } = await supabase
+      .from('water_meters')
+      .select('*')
+      .order('id')
 
-  if (error) {
-    console.error('=== SUPABASE ERROR ===')
-    console.error('Error details:', error)
-    console.error('Error message:', error.message)
-    console.error('Error code:', error.code)
-    throw error
+    if (error) {
+      console.error('=== SUPABASE ERROR ===')
+      console.error('Error details:', error)
+      console.error('Error message:', error.message)
+      console.error('Error code:', error.code)
+      
+      // Return empty array for graceful fallback
+      console.log('Returning empty array as fallback')
+      return []
+    }
+
+    console.log('=== SUPABASE SUCCESS ===')
+    console.log('Data fetched successfully, total records:', data?.length || 0)
+    
+    return data || []
+  } catch (networkError) {
+    console.error('=== NETWORK ERROR ===')
+    console.error('Network error:', networkError)
+    console.log('Returning empty array as fallback')
+    return []
   }
-
-  console.log('=== SUPABASE SUCCESS ===')
-  console.log('Data fetched successfully, total records:', data?.length || 0)
 
   // Debug: Log sample data to understand structure
   if (data && data.length > 0) {
