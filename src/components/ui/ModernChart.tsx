@@ -608,11 +608,32 @@ export const ModernDonutChart: React.FC<ModernDonutChartProps> = ({
   innerRadius = 60,
   outerRadius = 100
 }) => {
+  // Safety checks
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Card className={`pt-0 ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500 dark:text-gray-400">No data available</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!config || Object.keys(config).length === 0) {
+    return (
+      <Card className={`pt-0 ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500 dark:text-gray-400">Chart configuration missing</p>
+        </div>
+      </Card>
+    );
+  }
+
   const dataKeys = Object.keys(config);
-  const colors = dataKeys.map(key => config[key].color || theme.charts.colors[0]);
+  const colors = dataKeys.map(key => config[key]?.color || theme.charts?.colors?.[0] || '#3b82f6');
   
   // Calculate inner radius based on theme ratio for doughnut style
-  const calculatedInnerRadius = outerRadius * theme.charts.pie.innerRadiusRatio;
+  const calculatedInnerRadius = outerRadius * (theme.charts?.pie?.innerRadiusRatio || 0.6);
 
   return (
     <Card className={`pt-0 ${className}`}>
