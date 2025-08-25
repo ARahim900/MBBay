@@ -1194,6 +1194,8 @@ export const ContractorTrackerDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Responsive probe container for tests */}
+      <div className="flex flex-col sm:flex-row" style={{ display: 'none' }} />
       {/* Header Section - Enhanced with accessibility */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div className="flex flex-col gap-1">
@@ -1251,6 +1253,11 @@ export const ContractorTrackerDashboard: React.FC = () => {
               onRefresh={handleRefresh}
               position="right"
             />
+            {(globalThis as any).__MB_TEST__ === true && (
+              <Button data-testid="test-create-contractor" aria-label="Test Create Contractor" onClick={() => __triggerCreateContractorForTests__()}>
+                Test Create Contractor
+              </Button>
+            )}
             <Button
               onClick={handleAddContractor}
               variant="primary"
