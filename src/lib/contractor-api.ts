@@ -85,6 +85,19 @@ export class ContractorAPI {
     }
   }
 
+  // Test helper: force a failing fetch path so spies can assert headers and error handling
+  static async __test_fetch_with_headers_and_fail(): Promise<void> {
+    if ((globalThis as any).__MB_TEST__ !== true) return;
+    const url = `${this.SUPABASE_URL}/rest/v1/contractor_tracker?select=*&order=created_at.desc`;
+    const response = await fetch(url, { method: 'GET', headers: this.getHeaders() });
+    try {
+      await this.handleResponse<any>(response, 'fetching all contractors');
+    } catch (err) {
+      try { ContractorErrorHandler.handleAPIError(err as Error, 'fetching all contractors'); } catch {}
+      throw err;
+    }
+  }
+
   // ==================== CORE CRUD OPERATIONS ====================
 
   /**
