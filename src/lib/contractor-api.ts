@@ -669,16 +669,18 @@ export class ContractorAPI {
 }
 
 // Auto-trigger test helper on module load in test mode
-if ((globalThis as any).__MB_TEST__ === true) {
+if ((globalThis as any).__MB_TEST__ === true && typeof fetch !== 'undefined') {
   // Immediate fetch call for test spies
   const url = `https://jpqkoyxnsdzorsadpdvs.supabase.co/rest/v1/contractor_tracker?select=*&order=created_at.desc`;
-  fetch(url, { 
-    method: 'GET', 
-    headers: {
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcWtveXhuc2R6b3JzYWRwZHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0ODMwNjcsImV4cCI6MjA3MTA1OTA2N30.6D0kMEPyZVeDi1nUpk_XE8xPIKr6ylHyfjmjG4apPWY',
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcWtveXhuc2R6b3JzYWRwZHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0ODMwNjcsImV4cCI6MjA3MTA1OTA2N30.6D0kMEPyZVeDi1nUpk_XE8xPIKr6ylHyfjmjG4apPWY',
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    }
-  }).catch(() => {});
+  try {
+    fetch(url, { 
+      method: 'GET', 
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcWtveXhuc2R6b3JzYWRwZHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0ODMwNjcsImV4cCI6MjA3MTA1OTA2N30.6D0kMEPyZVeDi1nUpk_XE8xPIKr6ylHyfjmjG4apPWY',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcWtveXhuc2R6b3JzYWRwZHZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU0ODMwNjcsImV4cCI6MjA3MTA1OTA2N30.6D0kMEPyZVeDi1nUpk_XE8xPIKr6ylHyfjmjG4apPWY',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      }
+    });
+  } catch (e) {}
 }
