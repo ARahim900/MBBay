@@ -713,20 +713,50 @@ const Header = () => {
 
 export default function App() {
   const { activeModule, isDarkMode, isSidebarCollapsed, toggleSidebarCollapse } = useAppStore();
-  useEffect(() => { if (isDarkMode) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } }, [isDarkMode]);
+  
+  useEffect(() => { 
+    if (isDarkMode) { 
+      document.documentElement.classList.add('dark'); 
+    } else { 
+      document.documentElement.classList.remove('dark'); 
+    } 
+  }, [isDarkMode]);
+
   const renderModule = () => {
-    switch (activeModule) {
-      case 'Water': return <WaterModule />;
-      case 'Electricity': return <ElectricityModule />;
-      case 'HVAC System': return <HVACModule />;
-      case 'Firefighting & Alarm': return <FirefightingModule />;
-      case 'Contractor Tracker': return (
-        <ErrorBoundary>
-          <ContractorTrackerDashboard />
-        </ErrorBoundary>
+    try {
+      switch (activeModule) {
+        case 'Water': return <WaterModule />;
+        case 'Electricity': return <ElectricityModule />;
+        case 'HVAC System': return <HVACModule />;
+        case 'Firefighting & Alarm': return <FirefightingModule />;
+        case 'Contractor Tracker': return (
+          <ErrorBoundary>
+            <ContractorTrackerDashboard />
+          </ErrorBoundary>
+        );
+        case 'STP Plant': return <STPPlantModule />;
+        default: return <WaterModule />; // Default to Water
+      }
+    } catch (error) {
+      console.error('Error rendering module:', error);
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              Module Loading Error
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              There was an error loading the {activeModule} module.
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
       );
-      case 'STP Plant': return <STPPlantModule />;
-      default: return <WaterModule />; // Default to Water
     }
   };
   return (
