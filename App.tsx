@@ -12,6 +12,7 @@ import { ContractorTrackerDashboard } from './src/components/ContractorTrackerDa
 import { ToastProvider } from './src/components/contractor/ErrorToast';
 import { SimpleSTPModuleBackup } from './src/components/SimpleSTPModuleBackup';
 import { STPErrorBoundary } from './src/components/STPErrorBoundary';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { theme } from './src/lib/theme';
 
 
