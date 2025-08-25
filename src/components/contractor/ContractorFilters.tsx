@@ -37,13 +37,14 @@ export const ContractorFilters: React.FC<ContractorFiltersProps> = ({
   data,
   className = ''
 }) => {
+  const safeData = Array.isArray(data) ? data : [];
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Get unique service categories from data for filtering
   const serviceCategories = useMemo(() => {
     const categories = new Set<string>();
-    data.forEach(contractor => {
+    safeData.forEach(contractor => {
       // Extract service category (first word or first few words)
       const serviceWords = contractor.service_provided.split(' ');
       const category = serviceWords.length > 2 
@@ -52,7 +53,7 @@ export const ContractorFilters: React.FC<ContractorFiltersProps> = ({
       categories.add(category);
     });
     return Array.from(categories).sort();
-  }, [data]);
+  }, [safeData]);
 
   // Handle filter changes
   const handleFilterChange = useCallback((key: keyof IContractorFilters, value: any) => {
