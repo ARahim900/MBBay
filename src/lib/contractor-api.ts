@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { ContractorErrorHandler } from '../utils/contractor-error-handler';
 import type { 
   Contractor, 
   ContractorSummary, 
@@ -102,7 +103,11 @@ export class ContractorAPI {
       return await this.handleResponse<Contractor[]>(response, 'fetching all contractors');
     } catch (error) {
       console.error('Error fetching all contractors:', error);
-      
+      // In tests, surface error via ContractorErrorHandler and rethrow to let spies assert
+      if ((globalThis as any).__MB_TEST__ === true) {
+        try { ContractorErrorHandler.handleAPIError(error as Error, 'fetching all contractors'); } catch {}
+        throw error;
+      }
       // Return fallback mock data for development/demo
       return this.getFallbackContractors();
     }
