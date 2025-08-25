@@ -760,21 +760,22 @@ export default function App() {
     }
   };
   return (
-    <ToastProvider>
-      <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
-        <Sidebar />
-        <Header />
-        
-        
-        {/* Main content area that adapts to sidebar width */}
-        <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
-          isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
-        }`}>
-          <main className="p-6">
-            {renderModule()}
-          </main>
+    <ErrorBoundary>
+      <ToastProvider>
+        <div className="bg-[#F7F7F9] dark:bg-[#1A181F] min-h-screen">
+          <Sidebar />
+          <Header />
+          
+          {/* Main content area that adapts to sidebar width */}
+          <div className={`transition-all duration-300 ease-in-out pt-[73px] ${
+            isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+          }`}>
+            <main className="p-6">
+              {renderModule()}
+            </main>
+          </div>
         </div>
-      </div>
-    </ToastProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
