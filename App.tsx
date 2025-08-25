@@ -765,7 +765,7 @@ export default function App() {
           </ErrorBoundary>
         );
         case 'STP Plant': return <STPPlantModule />;
-        default: return <WaterModule />; // Default to Water
+        default: return <TestComponent />; // Temporarily default to test component
       }
     } catch (error) {
       console.error('Error rendering module:', error);
