@@ -494,7 +494,11 @@ const electricityConsumptionByTypeData = [
 ];
 
 const ElectricityModule = () => {
-    return <EnhancedElectricityModule />;
+    return (
+        <ErrorBoundary>
+            <EnhancedElectricityModule />
+        </ErrorBoundary>
+    );
 };
 
 
