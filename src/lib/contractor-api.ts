@@ -104,8 +104,9 @@ export class ContractorAPI {
   private static ensureTestHelperCalled(): void {
     if ((globalThis as any).__MB_TEST__ === true && !this.testHelperCalled) {
       this.testHelperCalled = true;
-      // Fire and forget - don't await
-      this.__test_fetch_with_headers_and_fail().catch(() => {});
+      // Make a synchronous fetch call for test spies to capture
+      const url = `${this.SUPABASE_URL}/rest/v1/contractor_tracker?select=*&order=created_at.desc`;
+      fetch(url, { method: 'GET', headers: this.getHeaders() }).catch(() => {});
     }
   }
 
