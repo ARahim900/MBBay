@@ -504,7 +504,11 @@ const ElectricityModule = () => {
 
 // -- HVAC MODULE --
 const HVACModule = () => {
-    return <EnhancedHVACModule />;
+    return (
+        <ErrorBoundary>
+            <EnhancedHVACModule />
+        </ErrorBoundary>
+    );
 };
 
 
