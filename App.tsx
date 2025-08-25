@@ -472,7 +472,36 @@ const MainDatabase = () => {
 // -- WATER MODULE (Enhanced with Supabase) --
 const WaterModule = () => {
     return (
-        <ErrorBoundary>
+        <ErrorBoundary
+            fallback={({ error, resetError }) => (
+                <div className="min-h-[400px] flex items-center justify-center">
+                    <div className="text-center max-w-md">
+                        <h3 className="text-xl font-semibold text-red-600 mb-3">
+                            Water Module Error
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            The Water Management module encountered an error. This might be due to Supabase connection issues.
+                        </p>
+                        <button
+                            onClick={resetError}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                        >
+                            Try Again
+                        </button>
+                        {error && (
+                            <details className="mt-4 text-left">
+                                <summary className="cursor-pointer text-gray-500 text-sm">
+                                    Technical Details
+                                </summary>
+                                <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
+                                    {error.toString()}
+                                </pre>
+                            </details>
+                        )}
+                    </div>
+                </div>
+            )}
+        >
             <EnhancedWaterModule />
         </ErrorBoundary>
     );
