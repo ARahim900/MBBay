@@ -648,6 +648,7 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
   // Auto-refresh effect
   useEffect(() => {
     if (!autoRefresh || !networkStatus.isOnline) return;
+    if ((globalThis as any).__MB_TEST__ === true) return; // disable in tests
 
     const interval = setInterval(() => {
       if (ContractorCache.shouldRefreshCache()) {
