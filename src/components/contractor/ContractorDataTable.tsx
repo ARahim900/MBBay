@@ -62,8 +62,10 @@ export const ContractorDataTable: React.FC<ContractorDataTableProps> = ({
   const pageSize = 10;
 
   // Filter data based on current filters
+  const safeData = Array.isArray(data) ? data : [];
+
   const filteredData = useMemo(() => {
-    return data.filter(contractor => {
+    return safeData.filter(contractor => {
       // Status filter
       if (filters.status !== 'all' && contractor.status !== filters.status) {
         return false;
@@ -123,7 +125,7 @@ export const ContractorDataTable: React.FC<ContractorDataTableProps> = ({
       
       return true;
     });
-  }, [data, filters]);
+  }, [safeData, filters]);
 
   // Sort filtered data
   const sortedData = useMemo(() => {
@@ -248,7 +250,7 @@ export const ContractorDataTable: React.FC<ContractorDataTableProps> = ({
               fontFamily: getThemeValue('typography.fontFamily', 'Inter, sans-serif')
             }}
           >
-            {filteredData.length} of {data.length} contractors
+            {filteredData.length} of {safeData.length} contractors
             {filters.search && ` matching "${filters.search}"`}
           </p>
         </div>
