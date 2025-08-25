@@ -471,7 +471,11 @@ const MainDatabase = () => {
 
 // -- WATER MODULE (Enhanced with Supabase) --
 const WaterModule = () => {
-    return <EnhancedWaterModule />;
+    return (
+        <ErrorBoundary>
+            <EnhancedWaterModule />
+        </ErrorBoundary>
+    );
 };
 
 
