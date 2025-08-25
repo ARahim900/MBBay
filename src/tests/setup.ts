@@ -70,4 +70,10 @@ global.console = {
   error: vi.fn(),
 };
 
+// Default to online for tests unless explicitly toggled
+Object.defineProperty(window.navigator, 'onLine', {
+  configurable: true,
+  get: () => true,
+});
+
 // Auto-wrap render with minimal providers if needed can be added here later
