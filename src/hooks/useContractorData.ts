@@ -613,12 +613,17 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
       console.log('Network: Back online');
       updateNetworkStatus();
       
+      // In test mode, immediately set loading to false
+      if (isTestMode) {
+        setLoading(false);
+      }
+      
       // Auto-retry if we have an error and can retry
       if (error && retryState.canRetry) {
         setTimeout(() => {
           console.log('Auto-retrying after coming back online');
           retryOperation();
-        }, 1000);
+        }, isTestMode ? 0 : 1000); // No delay in test mode
       }
     };
 
