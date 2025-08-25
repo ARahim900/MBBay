@@ -720,7 +720,11 @@ export default function App() {
       case 'Electricity': return <ElectricityModule />;
       case 'HVAC System': return <HVACModule />;
       case 'Firefighting & Alarm': return <FirefightingModule />;
-      case 'Contractor Tracker': return <ContractorTrackerDashboard />;
+      case 'Contractor Tracker': return (
+        <ErrorBoundary>
+          <ContractorTrackerDashboard />
+        </ErrorBoundary>
+      );
       case 'STP Plant': return <STPPlantModule />;
       default: return <WaterModule />; // Default to Water
     }
