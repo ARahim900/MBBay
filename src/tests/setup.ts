@@ -69,3 +69,11 @@ global.console = {
   warn: vi.fn(),
   error: vi.fn(),
 };
+
+// Reduce cache duration for faster expiry in tests
+try {
+  const { ContractorCache } = await import('../utils/contractor-cache');
+  ContractorCache.__setCacheDurationForTests(100); // 100ms for expiry tests
+} catch {}
+
+// Auto-wrap render with minimal providers if needed can be added here later
