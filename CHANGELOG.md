@@ -1,3 +1,13 @@
+## [Unreleased]
+
+### Added
+- Global CSS override file at `src/overrides.css` to enforce navigation styling with high-specificity selectors and `!important` for reliability across variants and themes.
+- Data attributes on `Navigation` component (`data-mb-nav`, `data-mb-nav-item`, `data-active`, `data-variant`, `data-orientation`) to enable precise, non-invasive styling overrides.
+- Wired overrides via `<link rel="stylesheet" href="/src/overrides.css" />` in `index.html` to ensure early load and Netlify-friendly deployment.
+
+### Notes
+- Overrides intentionally use `!important` to guarantee they take precedence over utility classes.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

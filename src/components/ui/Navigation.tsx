@@ -61,7 +61,12 @@ export const Navigation: React.FC<NavigationProps> = ({
   };
 
   return (
-    <nav className={`${getBaseStyles()} ${className}`}>
+    <nav
+      className={`${getBaseStyles()} ${className}`}
+      data-mb-nav
+      data-variant={variant}
+      data-orientation={orientation}
+    >
       {items.map((item) => {
         const isActive = item.id === activeItem;
         const IconComponent = item.icon;
@@ -71,6 +76,9 @@ export const Navigation: React.FC<NavigationProps> = ({
             key={item.id}
             onClick={() => onItemClick(item.id)}
             className={getItemStyles(isActive)}
+            data-mb-nav-item
+            data-active={isActive ? 'true' : 'false'}
+            data-item-id={item.id}
           >
             <IconComponent className="w-4 h-4" />
             <span>{item.label}</span>

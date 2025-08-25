@@ -15,7 +15,8 @@
     "test:contractor:coverage": "vitest run --coverage src/tests/contractor-*.test.* src/tests/comprehensive-contractor-test-suite.test.tsx",
     "test:contractor:comprehensive": "tsx src/tests/test-runner.ts",
     "test:visual": "vitest run src/tests/visual-regression-contractor.test.tsx",
-    "test:integration": "vitest run src/tests/contractor-integration.test.tsx"
+    "test:integration": "vitest run src/tests/contractor-integration.test.tsx",
+    "auto:push": "powershell -ExecutionPolicy Bypass -File ./scripts/auto-commit-push.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",
@@ -37,11 +38,13 @@
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.1",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "jsdom": "^26.0.0",
     "tsx": "^4.7.1",
     "typescript": "~5.8.2",
     "vite": "^6.3.5"
   },
-  "overrides": {
-    "@testing-library/react": "$react"
-  }
+  "overrides": {}
 }

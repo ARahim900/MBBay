@@ -1,0 +1,95 @@
+/*
+  Global CSS overrides for navigation and key UI elements
+  These rules use high-specificity attribute selectors and !important to ensure they win.
+*/
+
+/* Navigation container */
+[data-mb-nav] {
+  display: flex !important;
+  gap: 0.25rem !important;
+}
+
+/* Horizontal vs vertical */
+[data-mb-nav][data-orientation="horizontal"] {
+  flex-direction: row !important;
+}
+[data-mb-nav][data-orientation="vertical"] {
+  flex-direction: column !important;
+}
+
+/* Base nav item */
+[data-mb-nav] [data-mb-nav-item] {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Tabs variant */
+[data-mb-nav][data-variant="tabs"] [data-mb-nav-item] {
+  border-bottom: 2px solid transparent !important;
+  color: #6b7280 !important; /* gray-500 */
+}
+[data-mb-nav][data-variant="tabs"] [data-mb-nav-item][data-active="true"] {
+  color: #2563eb !important; /* blue-600 */
+  border-color: #3b82f6 !important; /* blue-500 */
+}
+
+/* Pills variant */
+[data-mb-nav][data-variant="pills"] [data-mb-nav-item] {
+  background: transparent !important;
+  color: #4b5563 !important; /* gray-600 */
+}
+[data-mb-nav][data-variant="pills"] [data-mb-nav-item]:hover {
+  background: #f3f4f6 !important; /* gray-100 */
+  color: #111827 !important; /* gray-900 */
+}
+[data-mb-nav][data-variant="pills"] [data-mb-nav-item][data-active="true"] {
+  background: #3b82f6 !important; /* blue-500 */
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Sidebar variant */
+[data-mb-nav][data-variant="sidebar"] [data-mb-nav-item] {
+  width: 100% !important;
+  justify-content: flex-start !important;
+  color: #4b5563 !important; /* gray-600 */
+}
+[data-mb-nav][data-variant="sidebar"] [data-mb-nav-item][data-active="true"] {
+  background: #eff6ff !important; /* blue-50 */
+  color: #1d4ed8 !important; /* blue-700 */
+  border-right: 2px solid #3b82f6 !important; /* blue-500 */
+}
+
+/* Reduce icon size consistency */
+[data-mb-nav] [data-mb-nav-item] svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+/* Dark mode adjustments */
+.dark [data-mb-nav][data-variant="pills"] [data-mb-nav-item]:not([data-active="true"]) {
+  color: #d1d5db !important; /* gray-300 */
+}
+.dark [data-mb-nav][data-variant="pills"] [data-mb-nav-item][data-active="true"] {
+  background: rgba(30, 64, 175, 0.85) !important; /* blue-800/85 */
+}
+.dark [data-mb-nav][data-variant="sidebar"] [data-mb-nav-item][data-active="true"] {
+  background: rgba(30, 64, 175, 0.2) !important; /* blue-900/20 */
+  color: #93c5fd !important; /* blue-300 */
+  border-right-color: #3b82f6 !important;
+}
+
+/* Focus ring normalization */
+[data-mb-nav] [data-mb-nav-item]:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #3b82f6, 0 0 0 4px #ffffff !important;
+}
+
+
