@@ -374,6 +374,7 @@ export const ExpirationAlert: React.FC<ExpirationAlertProps> = ({
               size="sm"
               onClick={handleDismiss}
               className="p-2 text-gray-400 hover:text-gray-600"
+              aria-label="Dismiss"
             >
               <X className="h-4 w-4" />
             </Button>
