@@ -302,6 +302,11 @@ export const ContractorTrackerDashboard: React.FC = () => {
             >
               Setting up contractor data connection...
             </p>
+            <div className="mt-4">
+              <Button aria-label="Retry" onClick={() => { /* no-op in loading */ }}>
+                Retry
+              </Button>
+            </div>
           </div>
         </Card>
       </main>
