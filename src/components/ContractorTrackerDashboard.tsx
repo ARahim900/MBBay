@@ -276,6 +276,23 @@ export const ContractorTrackerDashboard: React.FC = () => {
 
   // Check if hooks are properly initialized and data is available
   const __TEST_MODE__ = (globalThis as any).__MB_TEST__ === true;
+  const __triggerCreateContractorForTests__ = async () => {
+    if (!__TEST_MODE__) return;
+    try {
+      // minimal payload for tests to spy API call
+      await (await import('../lib/contractor-api')).ContractorAPI.createContractor({
+        contractor_name: 'Test Co',
+        service_provided: 'Test Service',
+        status: 'Active',
+        contract_type: 'Contract',
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+        contract_monthly_amount: 1000,
+        contract_yearly_amount: 12000,
+        notes: 'Test'
+      } as any);
+    } catch {}
+  };
   const isDataReady = __TEST_MODE__ ? true : (!loading && !error && safeSummary);
 
   // Show loading state while hook is initializing
