@@ -76,4 +76,7 @@ Object.defineProperty(window.navigator, 'onLine', {
   get: () => true,
 });
 
+// Flag hooks/components to run in test mode
+(globalThis as any).__MB_TEST__ = true;
+
 // Auto-wrap render with minimal providers if needed can be added here later
