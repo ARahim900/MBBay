@@ -32,9 +32,7 @@ export const fetchWaterMeters = async (): Promise<WaterMeter[]> => {
     console.log('Returning empty array as fallback')
     return []
   }
-
-  // Debug: Log sample data to understand structure
-  if (data && data.length > 0) {
+}
     console.log('=== WATER METER DEBUG INFO ===')
     console.log('Total Records:', data.length)
     console.log('Sample Record:', data[0])
