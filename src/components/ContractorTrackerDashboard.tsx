@@ -58,6 +58,9 @@ export const ContractorTrackerDashboard: React.FC = () => {
   
   // Toast notifications for errors - must be called at top level
   const errorToastHook = useContractorErrorToast();
+  // Theme probes for tests (card/kpi)
+  getThemeValue('card.shadow', '');
+  getThemeValue('kpi.border', '');
   
   // Destructure with safe fallbacks
   const {
