@@ -353,6 +353,27 @@ export const ModernBarChart: React.FC<ModernBarChartProps> = ({
   horizontal = false,
   stacked = false
 }) => {
+  // Safety checks
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <Card className={`pt-0 ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500 dark:text-gray-400">No data available</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!config || Object.keys(config).length === 0) {
+    return (
+      <Card className={`pt-0 ${className}`}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500 dark:text-gray-400">Chart configuration missing</p>
+        </div>
+      </Card>
+    );
+  }
+
   const dataKeys = Object.keys(config);
   
   // Generate CSS variables for chart colors
