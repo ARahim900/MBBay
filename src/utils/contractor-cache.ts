@@ -12,7 +12,7 @@ export class ContractorCache {
     CACHE_VERSION: 'contractor_cache_version'
   } as const;
 
-  private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+  private static CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
   private static readonly CACHE_VERSION = '1.0.0';
 
   /**
@@ -80,6 +80,7 @@ export class ContractorCache {
       };
 
       localStorage.setItem(this.CACHE_KEYS.ANALYTICS, JSON.stringify(cacheData));
+      localStorage.setItem(this.CACHE_KEYS.LAST_FETCH, Date.now().toString());
       console.log('Cached contractor analytics');
     } catch (error) {
       console.warn('Failed to save analytics to cache:', error);
@@ -197,6 +198,13 @@ export class ContractorCache {
     } catch {
       return -1;
     }
+  }
+
+  /**
+   * Test helper: set cache duration (ms)
+   */
+  static __setCacheDurationForTests(durationMs: number): void {
+    this.CACHE_DURATION = durationMs;
   }
 
   /**
