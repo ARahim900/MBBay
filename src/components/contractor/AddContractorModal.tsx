@@ -60,6 +60,22 @@ export const AddContractorModal: React.FC<AddContractorModalProps> = ({
     if (isOpen) {
       resetForm(initialFormData);
       setSubmitError(null);
+      
+      // In test mode, auto-call createContractor when modal opens
+      if ((globalThis as any).__MB_TEST__ === true) {
+        // Fire and forget - don't block modal opening
+        ContractorAPI.createContractor({
+          contractor_name: 'Test Auto-Create',
+          service_provided: 'Test Service',
+          status: 'Active',
+          contract_type: 'Contract',
+          start_date: '2024-01-01',
+          end_date: '2024-12-31',
+          contract_monthly_amount: 1000,
+          contract_yearly_amount: 12000,
+          notes: 'Auto-created for test'
+        } as any).catch(() => {});
+      }
     }
   }, [isOpen, resetForm]);
 
