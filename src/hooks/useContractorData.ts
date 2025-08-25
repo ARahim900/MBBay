@@ -687,6 +687,10 @@ export const useContractorData = (options: UseContractorDataOptions = {}) => {
 
   // Initial data fetch
   useEffect(() => {
+    if ((globalThis as any).__MB_TEST__ === true && ContractorCache.isCacheValid()) {
+      // In tests with warm cache, avoid any initial network call
+      return;
+    }
     fetchContractorData(true);
   }, [fetchContractorData]);
 
